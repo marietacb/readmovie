@@ -1,0 +1,30 @@
+{
+  "year": 2025,
+  "readingGoal": 40,
+  "wishlist": [
+    { "title": "Ejemplo: Nombre del libro", "seriesLabel": "Crave 1", "read": false }
+  ],
+  "monthlyFavorites": {
+    "1": "Título exacto del favorito de enero",
+    "6": "Título exacto del favorito de junio"
+  },
+  "books": [
+    {
+      "title": "Ejemplo: Los chicos de Tommen",
+      "author": "Nombre del autor",
+      "pages": 320,
+      "totalChapters": 24,
+      "format": ["libro"],
+      "genre": "Fantasy",
+      "storyType": ["saga"],
+      "seriesLabel": "Tommen 1",
+      "startDate": "2025-01-10",
+      "endDate": "2025-01-28",
+      "rating": 4.5,
+      "romanceRating": 3,
+      "hypeRating": 4,
+      "characters": "Personajes favoritos (opcional)",
+      "opinion": "Tu opinión (opcional)"
+    }
+  ]
+}
