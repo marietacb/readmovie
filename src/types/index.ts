@@ -122,6 +122,7 @@ export interface Movie {
   worstMoments: string[];
   favouriteQuotes: string[];
   posterUrl?: string;
+  watchDate?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -161,9 +162,9 @@ export type BookTab = "estanteria" | "libreria" | "resena" | "favoritos" | "esta
 
 export type BookShelf = "leyendo" | "terminado" | "deseos" | "abandonado";
 
-export type MovieTab = "lista" | "resena";
+export type MovieTab = "panel" | "lista" | "calendario" | "estadisticas" | "resena";
 
-export type SeriesTab = "lista" | "resena";
+export type SeriesTab = "panel" | "lista" | "calendario" | "estadisticas" | "resena";
 
 export type MediaModule = "home" | "books" | "movies" | "series";
 

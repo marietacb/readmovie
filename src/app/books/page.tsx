@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   LayoutDashboard,
   Library,
@@ -30,6 +31,7 @@ import { WishlistView } from "@/components/books/WishlistView";
 import { YearInPixelsView } from "@/components/books/YearInPixelsView";
 import { MonthlyOverviewView } from "@/components/books/MonthlyOverviewView";
 import { ImportBooksView } from "@/components/books/ImportBooksView";
+import { ActivityCalendarView } from "@/components/shared/ActivityCalendarView";
 import { YearSelector } from "@/components/ui/YearSelector";
 import { useMediaTracker } from "@/context/MediaTrackerContext";
 import { isWishlistItemRead } from "@/lib/wishlist";
@@ -39,6 +41,7 @@ import type { Book, BookTab, WishlistItem } from "@/types";
 const NAV_ITEMS = [
   { id: "panel", label: "Panel", icon: <LayoutDashboard className="h-4 w-4" /> },
   { id: "estanteria", label: "Mi estantería", icon: <Library className="h-4 w-4" /> },
+  { id: "calendario", label: "Calendario", icon: <CalendarDays className="h-4 w-4" /> },
   { id: "wishlist", label: "Wishlist", icon: <ListChecks className="h-4 w-4" /> },
   { id: "year_pixels", label: "Year in Pixels", icon: <Grid3x3 className="h-4 w-4" /> },
   { id: "overview", label: "Overview", icon: <Table2 className="h-4 w-4" /> },
@@ -60,9 +63,10 @@ const YEAR_AWARE_TABS = new Set<BooksSection>([
   "book_of_year",
 ]);
 
-type BooksSection = BookTab | "panel" | "importar";
+type BooksSection = BookTab | "panel" | "importar" | "calendario";
 
 export default function BooksPage() {
+  const router = useRouter();
   const {
     books,
     movies,
@@ -207,6 +211,20 @@ export default function BooksPage() {
       )}
       {activeTab === "estanteria" && (
         <BookcaseView books={books} onBookClick={openBook} />
+      )}
+      {activeTab === "calendario" && (
+        <ActivityCalendarView
+          books={books}
+          movies={movies}
+          series={series}
+          defaultFilter="book"
+          onBookClick={(id) => {
+            const book = getBook(id);
+            if (book) openBook(book);
+          }}
+          onMovieClick={() => router.push("/movies")}
+          onSeriesClick={() => router.push("/series")}
+        />
       )}
       {activeTab === "wishlist" && (
         <WishlistView

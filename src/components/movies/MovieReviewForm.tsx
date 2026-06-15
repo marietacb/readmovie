@@ -25,6 +25,7 @@ const EMPTY_FORM = {
   worstMoments: ["", "", ""],
   favouriteQuotes: ["", "", "", ""],
   posterUrl: "",
+  watchDate: new Date().toISOString().split("T")[0],
 };
 
 function FormField({ label, children }: { label: string; children: React.ReactNode }) {
@@ -82,6 +83,7 @@ function movieToForm(movie: Movie) {
     worstMoments: [...movie.worstMoments, "", "", ""].slice(0, 3),
     favouriteQuotes: [...movie.favouriteQuotes, "", "", "", ""].slice(0, 4),
     posterUrl: movie.posterUrl ?? "",
+    watchDate: movie.watchDate ?? "",
   };
 }
 
@@ -116,6 +118,7 @@ export function MovieReviewForm({ movieId, onSaved, onDeleted }: MovieReviewForm
       worstMoments: form.worstMoments.filter((m) => m.trim()),
       favouriteQuotes: form.favouriteQuotes.filter((q) => q.trim()),
       posterUrl: form.posterUrl || undefined,
+      watchDate: form.watchDate || undefined,
     };
 
     if (movieId) {
@@ -156,6 +159,14 @@ export function MovieReviewForm({ movieId, onSaved, onDeleted }: MovieReviewForm
           </FormField>
           <FormField label="Género">
             <input value={form.genre} onChange={(e) => set("genre", e.target.value)} className="bj-input" />
+          </FormField>
+          <FormField label="Fecha de visionado">
+            <input
+              type="date"
+              value={form.watchDate}
+              onChange={(e) => set("watchDate", e.target.value)}
+              className="bj-input"
+            />
           </FormField>
         </div>
 

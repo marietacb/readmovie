@@ -58,6 +58,7 @@ export interface MovieRow {
   worst_moments: string[];
   favourite_quotes: string[];
   poster_url: string | null;
+  watch_date: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -181,6 +182,7 @@ export function movieToRow(movie: Movie, userId: string): MovieRow {
     worst_moments: movie.worstMoments,
     favourite_quotes: movie.favouriteQuotes,
     poster_url: movie.posterUrl ?? null,
+    watch_date: movie.watchDate ?? null,
     created_at: movie.createdAt,
     updated_at: movie.updatedAt,
   };
@@ -199,6 +201,7 @@ export function rowToMovie(row: MovieRow): Movie {
     worstMoments: row.worst_moments,
     favouriteQuotes: row.favourite_quotes,
     posterUrl: row.poster_url ?? undefined,
+    watchDate: row.watch_date ?? undefined,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };

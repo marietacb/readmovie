@@ -2,15 +2,24 @@
 
 import { Plus, Star, Tv } from "lucide-react";
 import { MOVIE_FEELINGS, SERIES_STATUSES } from "@/lib/constants";
-import type { Series } from "@/types";
+import type { Series, SeriesStatus } from "@/types";
+import { cn } from "@/lib/utils";
 
 interface SeriesListViewProps {
   series: Series[];
+  statusFilter?: SeriesStatus | "all";
+  onStatusFilterChange?: (status: SeriesStatus | "all") => void;
   onSeriesClick: (item: Series) => void;
   onNewSeries: () => void;
 }
 
-export function SeriesListView({ series, onSeriesClick, onNewSeries }: SeriesListViewProps) {
+export function SeriesListView({
+  series,
+  statusFilter = "all",
+  onStatusFilterChange,
+  onSeriesClick,
+  onNewSeries,
+}: SeriesListViewProps) {
   const feelingLabels = Object.fromEntries(
     MOVIE_FEELINGS.map((f) => [f.value, f.label])
   );
@@ -32,6 +41,38 @@ export function SeriesListView({ series, onSeriesClick, onNewSeries }: SeriesLis
           Nueva reseña
         </button>
       </div>
+
+      {onStatusFilterChange && (
+        <div className="mb-6 flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => onStatusFilterChange("all")}
+            className={cn(
+              "rounded-full px-3 py-1.5 text-sm font-medium",
+              statusFilter === "all"
+                ? "bg-bj-navy text-white"
+                : "border border-bj-border text-bj-muted hover:text-bj-navy"
+            )}
+          >
+            Todas
+          </button>
+          {SERIES_STATUSES.map((status) => (
+            <button
+              key={status.value}
+              type="button"
+              onClick={() => onStatusFilterChange(status.value)}
+              className={cn(
+                "rounded-full px-3 py-1.5 text-sm font-medium",
+                statusFilter === status.value
+                  ? "bg-bj-navy text-white"
+                  : "border border-bj-border text-bj-muted hover:text-bj-navy"
+              )}
+            >
+              {status.label}
+            </button>
+          ))}
+        </div>
+      )}
 
       {series.length === 0 ? (
         <div className="rounded-xl border-2 border-dashed border-bj-border py-16 text-center">
@@ -67,6 +108,13 @@ export function SeriesListView({ series, onSeriesClick, onNewSeries }: SeriesLis
                 <span className="mt-1 inline-block rounded-full bg-bj-navy/5 px-2 py-0.5 text-[10px] text-bj-muted">
                   {statusLabels[item.status]}
                 </span>
+                {(item.startDate || item.endDate) && (
+                  <p className="mt-1 text-xs text-bj-muted">
+                    {item.startDate && `Desde ${new Date(item.startDate).toLocaleDateString("es-ES")}`}
+                    {item.startDate && item.endDate && " · "}
+                    {item.endDate && `Hasta ${new Date(item.endDate).toLocaleDateString("es-ES")}`}
+                  </p>
+                )}
                 {item.summary && (
                   <p className="mt-1 line-clamp-2 text-xs text-bj-muted">{item.summary}</p>
                 )}

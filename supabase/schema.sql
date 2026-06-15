@@ -56,6 +56,7 @@ create table if not exists public.movies (
   worst_moments text[] not null default '{}',
   favourite_quotes text[] not null default '{}',
   poster_url text,
+  watch_date date,
   created_at timestamptz not null,
   updated_at timestamptz not null
 );

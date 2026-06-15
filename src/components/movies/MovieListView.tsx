@@ -60,6 +60,11 @@ export function MovieListView({ movies, onMovieClick, onNewMovie }: MovieListVie
                   {movie.director && `${movie.director} · `}
                   {movie.genre}
                 </p>
+                {movie.watchDate && (
+                  <p className="text-xs text-bj-muted">
+                    Vista el {new Date(movie.watchDate).toLocaleDateString("es-ES")}
+                  </p>
+                )}
                 {movie.summary && (
                   <p className="mt-1 line-clamp-2 text-xs text-bj-muted">{movie.summary}</p>
                 )}
