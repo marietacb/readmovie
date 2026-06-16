@@ -86,6 +86,17 @@ export interface PixelLegendBand {
 
 export type YearlyPixelLegends = Record<number, PixelLegendBand[]>;
 
+/** Personalización del cuaderno PDF exportable por año */
+export interface NotebookExportSettings {
+  /** Foto para la página de favoritos (URL o data URL) */
+  favoritePhotoUrl?: string;
+  favoritePhotoCaption?: string;
+  coverQuote?: string;
+  enabledStickerIds: string[];
+}
+
+export type YearlyNotebookExportSettings = Record<number, NotebookExportSettings>;
+
 /** Entrada de lista de deseos (checklist del cuaderno) */
 export interface WishlistItem {
   id: string;
@@ -158,7 +169,7 @@ export interface Series {
 
 // ─── Navegación ───────────────────────────────────────────────────────────────
 
-export type BookTab = "estanteria" | "libreria" | "resena" | "favoritos" | "estadisticas" | "diario" | "resumen_mes" | "wishlist" | "year_pixels" | "overview" | "book_of_year";
+export type BookTab = "estanteria" | "libreria" | "resena" | "favoritos" | "estadisticas" | "diario" | "resumen_mes" | "wishlist" | "year_pixels" | "overview" | "book_of_year" | "exportar_cuaderno";
 
 export type BookShelf = "leyendo" | "terminado" | "deseos" | "abandonado";
 
@@ -178,6 +189,7 @@ export interface MediaTrackerData {
   monthlyFavorites: YearlyMonthlyFavorites;
   bookOfYearBrackets: YearlyBookOfYearBrackets;
   yearPixelLegends: YearlyPixelLegends;
+  notebookExportSettings: YearlyNotebookExportSettings;
   readingGoal: number;
 }
 

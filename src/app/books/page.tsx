@@ -16,6 +16,7 @@ import {
   Table2,
   Trophy,
   Upload,
+  FileDown,
 } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { BookcaseView } from "@/components/books/BookcaseView";
@@ -31,6 +32,7 @@ import { WishlistView } from "@/components/books/WishlistView";
 import { YearInPixelsView } from "@/components/books/YearInPixelsView";
 import { MonthlyOverviewView } from "@/components/books/MonthlyOverviewView";
 import { ImportBooksView } from "@/components/books/ImportBooksView";
+import { NotebookExportView } from "@/components/books/NotebookExportView";
 import { ActivityCalendarView } from "@/components/shared/ActivityCalendarView";
 import { YearSelector } from "@/components/ui/YearSelector";
 import { useMediaTracker } from "@/context/MediaTrackerContext";
@@ -52,6 +54,7 @@ const NAV_ITEMS = [
   { id: "libreria", label: "Búsqueda", icon: <Search className="h-4 w-4" /> },
   { id: "resena", label: "Nueva reseña", icon: <PenLine className="h-4 w-4" /> },
   { id: "importar", label: "Importar", icon: <Upload className="h-4 w-4" /> },
+  { id: "exportar_cuaderno", label: "Exportar cuaderno", icon: <FileDown className="h-4 w-4" /> },
   { id: "favoritos", label: "Favoritos", icon: <Star className="h-4 w-4" /> },
 ];
 
@@ -279,6 +282,7 @@ export default function BooksPage() {
         />
       )}
       {activeTab === "importar" && <ImportBooksView />}
+      {activeTab === "exportar_cuaderno" && <NotebookExportView />}
       {activeTab === "favoritos" && (
         <MonthlyFavoritesView
           books={books}

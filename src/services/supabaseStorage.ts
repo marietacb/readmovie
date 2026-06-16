@@ -3,6 +3,7 @@ import { normalizeBooks } from "@/lib/normalizeBook";
 import { normalizeYearlyBookOfYearBrackets } from "@/lib/yearlyBrackets";
 import { normalizeYearPixelLegends } from "@/lib/pixelLegends";
 import { normalizeYearlyMonthlyFavorites } from "@/lib/yearlyFavorites";
+import { normalizeYearlyNotebookExportSettings } from "@/lib/notebookExport/settings";
 import { createClient } from "@/lib/supabase/client";
 import type { MediaTrackerData, StorageService } from "@/types";
 import {
@@ -30,9 +31,19 @@ export class SupabaseStorageService implements StorageService {
 
     let profileRes = await supabase
       .from("profiles")
-      .select("reading_goal, monthly_favorites, book_of_year_brackets, year_pixel_legends")
+      .select(
+        "reading_goal, monthly_favorites, book_of_year_brackets, year_pixel_legends, notebook_export_settings",
+      )
       .eq("id", this.userId)
       .maybeSingle();
+
+    if (profileRes.error?.message?.includes("notebook_export_settings")) {
+      profileRes = await supabase
+        .from("profiles")
+        .select("reading_goal, monthly_favorites, book_of_year_brackets, year_pixel_legends")
+        .eq("id", this.userId)
+        .maybeSingle();
+    }
 
     if (profileRes.error?.message?.includes("year_pixel_legends")) {
       profileRes = await supabase
@@ -70,6 +81,7 @@ export class SupabaseStorageService implements StorageService {
         monthly_favorites: {},
         book_of_year_brackets: {},
         year_pixel_legends: {},
+        notebook_export_settings: {},
       });
     }
 
@@ -95,6 +107,14 @@ export class SupabaseStorageService implements StorageService {
               : {}
           )
         : {},
+      notebookExportSettings: profileRes.data
+        ? normalizeYearlyNotebookExportSettings(
+            "notebook_export_settings" in (profileRes.data ?? {})
+              ? (profileRes.data as { notebook_export_settings?: unknown })
+                  .notebook_export_settings ?? {}
+              : {}
+          )
+        : {},
       readingGoal: profileRes.data?.reading_goal ?? 24,
     };
   }
@@ -108,10 +128,16 @@ export class SupabaseStorageService implements StorageService {
       monthly_favorites: data.monthlyFavorites,
       book_of_year_brackets: data.bookOfYearBrackets,
       year_pixel_legends: data.yearPixelLegends,
+      notebook_export_settings: data.notebookExportSettings,
       updated_at: new Date().toISOString(),
     };
 
     let { error: profileError } = await supabase.from("profiles").upsert(profilePayload);
+    if (profileError?.message?.includes("notebook_export_settings")) {
+      const { notebook_export_settings: _settings, ...withoutSettings } = profilePayload;
+      void _settings;
+      ({ error: profileError } = await supabase.from("profiles").upsert(withoutSettings));
+    }
     if (profileError?.message?.includes("year_pixel_legends")) {
       const { year_pixel_legends: _legends, ...withoutLegends } = profilePayload;
       void _legends;

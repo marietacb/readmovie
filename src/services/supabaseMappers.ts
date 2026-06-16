@@ -300,6 +300,7 @@ export function emptyData(): MediaTrackerData {
     monthlyFavorites: {},
     bookOfYearBrackets: {},
     yearPixelLegends: {},
+    notebookExportSettings: {},
     readingGoal: 24,
   };
 }

@@ -19,6 +19,9 @@ import {
   setMonthlyFavoriteForYear,
 } from "@/lib/yearlyFavorites";
 import { sanitizeBandsForSave } from "@/lib/pixelLegends";
+import {
+  setNotebookExportSettingsForYear,
+} from "@/lib/notebookExport/settings";
 import { applyNotebookImport, type ImportResult, type NotebookImportPayload } from "@/lib/importBooks";
 import { generateId, randomSpineColor } from "@/lib/utils";
 import { getStorageService, usesCloudStorage } from "@/services/storage";
@@ -39,6 +42,8 @@ import type {
   YearlyBookOfYearBrackets,
   YearlyMonthlyFavorites,
   YearlyPixelLegends,
+  YearlyNotebookExportSettings,
+  NotebookExportSettings,
 } from "@/types";
 
 interface MediaTrackerContextValue {
@@ -49,6 +54,7 @@ interface MediaTrackerContextValue {
   monthlyFavorites: YearlyMonthlyFavorites;
   bookOfYearBrackets: YearlyBookOfYearBrackets;
   yearPixelLegends: YearlyPixelLegends;
+  notebookExportSettings: YearlyNotebookExportSettings;
   readingGoal: number;
   isLoaded: boolean;
   isCloudSync: boolean;
@@ -76,6 +82,7 @@ interface MediaTrackerContextValue {
   setReadingGoal: (goal: number) => void;
   setPixelLegendForYear: (year: number, bands: PixelLegendBand[]) => void;
   resetPixelLegendForYear: (year: number) => void;
+  setNotebookExportSettings: (year: number, settings: NotebookExportSettings) => void;
   importNotebook: (payload: NotebookImportPayload) => ImportResult;
   addReadingSession: (bookId: string, session: Omit<ReadingSession, "id">) => void;
   updateReadingSession: (
@@ -102,6 +109,7 @@ export function MediaTrackerProvider({ children }: { children: ReactNode }) {
     monthlyFavorites: {},
     bookOfYearBrackets: {},
     yearPixelLegends: {},
+    notebookExportSettings: {},
     readingGoal: 24,
   });
   const [isLoaded, setIsLoaded] = useState(false);
@@ -139,6 +147,7 @@ export function MediaTrackerProvider({ children }: { children: ReactNode }) {
             monthlyFavorites: {},
             bookOfYearBrackets: {},
             yearPixelLegends: {},
+            notebookExportSettings: {},
             readingGoal: 24,
           });
           setIsLoaded(true);
@@ -414,6 +423,20 @@ export function MediaTrackerProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const setNotebookExportSettings = useCallback(
+    (year: number, settings: NotebookExportSettings) => {
+      setData((prev) => ({
+        ...prev,
+        notebookExportSettings: setNotebookExportSettingsForYear(
+          prev.notebookExportSettings,
+          year,
+          settings,
+        ),
+      }));
+    },
+    [],
+  );
+
   const importNotebook = useCallback((payload: NotebookImportPayload): ImportResult => {
     let result: ImportResult = {
       booksImported: 0,
@@ -534,6 +557,7 @@ export function MediaTrackerProvider({ children }: { children: ReactNode }) {
       monthlyFavorites: data.monthlyFavorites,
       bookOfYearBrackets: data.bookOfYearBrackets,
       yearPixelLegends: data.yearPixelLegends,
+      notebookExportSettings: data.notebookExportSettings,
       readingGoal: data.readingGoal,
       isLoaded,
       isCloudSync,
@@ -561,6 +585,7 @@ export function MediaTrackerProvider({ children }: { children: ReactNode }) {
       setReadingGoal,
       setPixelLegendForYear,
       resetPixelLegendForYear,
+      setNotebookExportSettings,
       importNotebook,
       addReadingSession,
       updateReadingSession,
@@ -596,6 +621,7 @@ export function MediaTrackerProvider({ children }: { children: ReactNode }) {
       setReadingGoal,
       setPixelLegendForYear,
       resetPixelLegendForYear,
+      setNotebookExportSettings,
       importNotebook,
       addReadingSession,
       updateReadingSession,

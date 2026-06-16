@@ -3,6 +3,7 @@ import { normalizeBooks } from "@/lib/normalizeBook";
 import { normalizeYearlyBookOfYearBrackets } from "@/lib/yearlyBrackets";
 import { normalizeYearPixelLegends } from "@/lib/pixelLegends";
 import { normalizeYearlyMonthlyFavorites } from "@/lib/yearlyFavorites";
+import { normalizeYearlyNotebookExportSettings } from "@/lib/notebookExport/settings";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import type { MediaTrackerData, StorageService } from "@/types";
 import { SupabaseStorageService } from "./supabaseStorage";
@@ -15,6 +16,7 @@ const DEFAULT_DATA: MediaTrackerData = {
   monthlyFavorites: {},
   bookOfYearBrackets: {},
   yearPixelLegends: {},
+  notebookExportSettings: {},
   readingGoal: 24,
 };
 
@@ -39,6 +41,9 @@ export class LocalStorageService implements StorageService {
         monthlyFavorites: normalizeYearlyMonthlyFavorites(parsed.monthlyFavorites),
         bookOfYearBrackets: normalizeYearlyBookOfYearBrackets(parsed.bookOfYearBrackets),
         yearPixelLegends: normalizeYearPixelLegends(parsed.yearPixelLegends),
+        notebookExportSettings: normalizeYearlyNotebookExportSettings(
+          parsed.notebookExportSettings,
+        ),
         readingGoal: parsed.readingGoal ?? 24,
       };
     } catch {
