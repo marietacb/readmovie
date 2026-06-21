@@ -19,9 +19,9 @@ import {
   setMonthlyFavoriteForYear,
 } from "@/lib/yearlyFavorites";
 import { sanitizeBandsForSave } from "@/lib/pixelLegends";
-import {
-  setNotebookExportSettingsForYear,
-} from "@/lib/notebookExport/settings";
+import { setNotebookExportSettingsForYear } from "@/lib/notebookExport/settings";
+import { getDayNote, setDayNoteInMap } from "@/lib/dayNotes";
+import { countUniqueEpisodes } from "@/lib/episodeWatchLogs";
 import { applyNotebookImport, type ImportResult, type NotebookImportPayload } from "@/lib/importBooks";
 import { generateId, randomSpineColor } from "@/lib/utils";
 import { getStorageService, usesCloudStorage } from "@/services/storage";
@@ -36,6 +36,7 @@ import type {
   Movie,
   MovieFeeling,
   ReadingSession,
+  EpisodeWatchLog,
   Series,
   WishlistItem,
   PixelLegendBand,
@@ -44,6 +45,7 @@ import type {
   YearlyPixelLegends,
   YearlyNotebookExportSettings,
   NotebookExportSettings,
+  DayNotes,
 } from "@/types";
 
 interface MediaTrackerContextValue {
@@ -55,6 +57,7 @@ interface MediaTrackerContextValue {
   bookOfYearBrackets: YearlyBookOfYearBrackets;
   yearPixelLegends: YearlyPixelLegends;
   notebookExportSettings: YearlyNotebookExportSettings;
+  dayNotes: DayNotes;
   readingGoal: number;
   isLoaded: boolean;
   isCloudSync: boolean;
@@ -74,6 +77,11 @@ interface MediaTrackerContextValue {
   updateSeries: (id: string, updates: Partial<Series>) => void;
   deleteSeries: (id: string) => void;
   getSeries: (id: string) => Series | undefined;
+  addEpisodeWatchLog: (
+    seriesId: string,
+    log: Omit<EpisodeWatchLog, "id">,
+  ) => void;
+  removeEpisodeWatchLog: (seriesId: string, logId: string) => void;
   setMonthlyFavorite: (year: number, month: Month, bookId: string | null) => void;
   setBracketWinner: (year: number, round: BracketRound, index: number, winnerId: string) => void;
   resetBookOfYearBracket: (year: number) => void;
@@ -83,6 +91,8 @@ interface MediaTrackerContextValue {
   setPixelLegendForYear: (year: number, bands: PixelLegendBand[]) => void;
   resetPixelLegendForYear: (year: number) => void;
   setNotebookExportSettings: (year: number, settings: NotebookExportSettings) => void;
+  setDayNote: (date: string, note: string | null) => void;
+  getDayNote: (date: string) => string | undefined;
   importNotebook: (payload: NotebookImportPayload) => ImportResult;
   addReadingSession: (bookId: string, session: Omit<ReadingSession, "id">) => void;
   updateReadingSession: (
@@ -110,6 +120,7 @@ export function MediaTrackerProvider({ children }: { children: ReactNode }) {
     bookOfYearBrackets: {},
     yearPixelLegends: {},
     notebookExportSettings: {},
+    dayNotes: {},
     readingGoal: 24,
   });
   const [isLoaded, setIsLoaded] = useState(false);
@@ -148,6 +159,7 @@ export function MediaTrackerProvider({ children }: { children: ReactNode }) {
             bookOfYearBrackets: {},
             yearPixelLegends: {},
             notebookExportSettings: {},
+            dayNotes: {},
             readingGoal: 24,
           });
           setIsLoaded(true);
@@ -317,6 +329,7 @@ export function MediaTrackerProvider({ children }: { children: ReactNode }) {
       const newSeries: Series = {
         ...series,
         favoriteEpisodes: series.favoriteEpisodes ?? [],
+        episodeWatchLogs: series.episodeWatchLogs ?? [],
         id: generateId(),
         createdAt: now,
         updatedAt: now,
@@ -349,6 +362,51 @@ export function MediaTrackerProvider({ children }: { children: ReactNode }) {
     (id: string) => data.series.find((s) => s.id === id),
     [data.series]
   );
+
+  const addEpisodeWatchLog = useCallback(
+    (seriesId: string, log: Omit<EpisodeWatchLog, "id">) => {
+      setData((prev) => ({
+        ...prev,
+        series: prev.series.map((item) => {
+          if (item.id !== seriesId) return item;
+          const episodeWatchLogs = [
+            ...(item.episodeWatchLogs ?? []),
+            { ...log, id: generateId(), date: log.date.slice(0, 10) },
+          ].sort((a, b) => {
+            const byDate = b.date.localeCompare(a.date);
+            if (byDate !== 0) return byDate;
+            if (a.season !== b.season) return a.season - b.season;
+            return a.episode - b.episode;
+          });
+          return {
+            ...item,
+            episodeWatchLogs,
+            episodesWatched: countUniqueEpisodes(episodeWatchLogs),
+            updatedAt: new Date().toISOString(),
+          };
+        }),
+      }));
+    },
+    [],
+  );
+
+  const removeEpisodeWatchLog = useCallback((seriesId: string, logId: string) => {
+    setData((prev) => ({
+      ...prev,
+      series: prev.series.map((item) => {
+        if (item.id !== seriesId) return item;
+        const episodeWatchLogs = (item.episodeWatchLogs ?? []).filter(
+          (log) => log.id !== logId,
+        );
+        return {
+          ...item,
+          episodeWatchLogs,
+          episodesWatched: countUniqueEpisodes(episodeWatchLogs) || undefined,
+          updatedAt: new Date().toISOString(),
+        };
+      }),
+    }));
+  }, []);
 
   const setMonthlyFavorite = useCallback((year: number, month: Month, bookId: string | null) => {
     setData((prev) => {
@@ -435,6 +493,18 @@ export function MediaTrackerProvider({ children }: { children: ReactNode }) {
       }));
     },
     [],
+  );
+
+  const setDayNote = useCallback((date: string, note: string | null) => {
+    setData((prev) => ({
+      ...prev,
+      dayNotes: setDayNoteInMap(prev.dayNotes, date, note),
+    }));
+  }, []);
+
+  const getDayNoteFn = useCallback(
+    (date: string) => getDayNote(data.dayNotes, date),
+    [data.dayNotes],
   );
 
   const importNotebook = useCallback((payload: NotebookImportPayload): ImportResult => {
@@ -558,6 +628,7 @@ export function MediaTrackerProvider({ children }: { children: ReactNode }) {
       bookOfYearBrackets: data.bookOfYearBrackets,
       yearPixelLegends: data.yearPixelLegends,
       notebookExportSettings: data.notebookExportSettings,
+      dayNotes: data.dayNotes,
       readingGoal: data.readingGoal,
       isLoaded,
       isCloudSync,
@@ -577,6 +648,8 @@ export function MediaTrackerProvider({ children }: { children: ReactNode }) {
       updateSeries,
       deleteSeries,
       getSeries,
+      addEpisodeWatchLog,
+      removeEpisodeWatchLog,
       setMonthlyFavorite,
       setBracketWinner,
       resetBookOfYearBracket,
@@ -586,6 +659,8 @@ export function MediaTrackerProvider({ children }: { children: ReactNode }) {
       setPixelLegendForYear,
       resetPixelLegendForYear,
       setNotebookExportSettings,
+      setDayNote,
+      getDayNote: getDayNoteFn,
       importNotebook,
       addReadingSession,
       updateReadingSession,
@@ -613,6 +688,8 @@ export function MediaTrackerProvider({ children }: { children: ReactNode }) {
       updateSeries,
       deleteSeries,
       getSeries,
+      addEpisodeWatchLog,
+      removeEpisodeWatchLog,
       setMonthlyFavorite,
       setBracketWinner,
       resetBookOfYearBracket,
@@ -622,6 +699,8 @@ export function MediaTrackerProvider({ children }: { children: ReactNode }) {
       setPixelLegendForYear,
       resetPixelLegendForYear,
       setNotebookExportSettings,
+      setDayNote,
+      getDayNoteFn,
       importNotebook,
       addReadingSession,
       updateReadingSession,

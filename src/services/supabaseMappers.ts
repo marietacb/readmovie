@@ -1,4 +1,7 @@
 import { normalizeYearlyMonthlyFavorites } from "@/lib/yearlyFavorites";
+import { normalizeSeries } from "@/lib/normalizeSeries";
+import { normalizeMovie } from "@/lib/normalizeMovie";
+import { genresFromStorage, genresToStorage } from "@/lib/genres";
 import { clampBookRating } from "@/lib/ratings";
 import { normalizeBook } from "@/lib/normalizeBook";
 import type {
@@ -14,6 +17,7 @@ import type {
   SeriesStatus,
   StoryType,
   WishlistItem,
+  EpisodeWatchLog,
 } from "@/types";
 
 export interface BookRow {
@@ -28,6 +32,7 @@ export interface BookRow {
   end_date: string | null;
   publisher: string | null;
   genre: string | null;
+  original_nationality?: string | null;
   publish_year: number | null;
   story_type: string[];
   characters: string | null;
@@ -51,6 +56,7 @@ export interface MovieRow {
   title: string;
   director: string;
   genre: string;
+  original_nationality?: string | null;
   summary: string;
   rating: number;
   feelings: string[];
@@ -69,6 +75,7 @@ export interface SeriesRow {
   title: string;
   creator: string;
   genre: string;
+  original_nationality?: string | null;
   platform: string;
   summary: string;
   rating: number;
@@ -84,6 +91,7 @@ export interface SeriesRow {
   best_moments: string[];
   worst_moments: string[];
   favourite_quotes: string[];
+  episode_watch_logs?: EpisodeWatchLog[];
   poster_url: string | null;
   created_at: string;
   updated_at: string;
@@ -119,7 +127,8 @@ export function bookToRow(book: Book, userId: string): BookRow {
     start_date: book.startDate ?? null,
     end_date: book.endDate ?? null,
     publisher: book.publisher ?? null,
-    genre: book.genre ?? null,
+    genre: genresToStorage(book.genres) || null,
+    original_nationality: book.originalNationality ?? null,
     publish_year: book.publishYear ?? null,
     story_type: book.storyType,
     characters: book.characters ?? null,
@@ -149,7 +158,8 @@ export function rowToBook(row: BookRow): Book {
     startDate: row.start_date ?? undefined,
     endDate: row.end_date ?? undefined,
     publisher: row.publisher ?? undefined,
-    genre: row.genre ?? undefined,
+    genres: genresFromStorage(row.genre),
+    originalNationality: row.original_nationality ?? undefined,
     publishYear: row.publish_year ?? undefined,
     storyType: row.story_type as StoryType[],
     characters: row.characters ?? undefined,
@@ -174,7 +184,8 @@ export function movieToRow(movie: Movie, userId: string): MovieRow {
     user_id: userId,
     title: movie.title,
     director: movie.director,
-    genre: movie.genre,
+    genre: genresToStorage(movie.genres),
+    original_nationality: movie.originalNationality ?? null,
     summary: movie.summary,
     rating: movie.rating,
     feelings: movie.feelings,
@@ -189,11 +200,12 @@ export function movieToRow(movie: Movie, userId: string): MovieRow {
 }
 
 export function rowToMovie(row: MovieRow): Movie {
-  return {
+  return normalizeMovie({
     id: row.id,
     title: row.title,
     director: row.director,
-    genre: row.genre,
+    genres: genresFromStorage(row.genre),
+    originalNationality: row.original_nationality ?? undefined,
     summary: row.summary,
     rating: row.rating,
     feelings: row.feelings as MovieFeeling[],
@@ -204,7 +216,7 @@ export function rowToMovie(row: MovieRow): Movie {
     watchDate: row.watch_date ?? undefined,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
-  };
+  });
 }
 
 export function seriesToRow(series: Series, userId: string): SeriesRow {
@@ -213,7 +225,8 @@ export function seriesToRow(series: Series, userId: string): SeriesRow {
     user_id: userId,
     title: series.title,
     creator: series.creator,
-    genre: series.genre,
+    genre: genresToStorage(series.genres),
+    original_nationality: series.originalNationality ?? null,
     platform: series.platform,
     summary: series.summary,
     rating: series.rating,
@@ -229,6 +242,7 @@ export function seriesToRow(series: Series, userId: string): SeriesRow {
     best_moments: series.bestMoments,
     worst_moments: series.worstMoments,
     favourite_quotes: series.favouriteQuotes,
+    episode_watch_logs: series.episodeWatchLogs ?? [],
     poster_url: series.posterUrl ?? null,
     created_at: series.createdAt,
     updated_at: series.updatedAt,
@@ -236,11 +250,12 @@ export function seriesToRow(series: Series, userId: string): SeriesRow {
 }
 
 export function rowToSeries(row: SeriesRow): Series {
-  return {
+  return normalizeSeries({
     id: row.id,
     title: row.title,
     creator: row.creator,
-    genre: row.genre,
+    genres: genresFromStorage(row.genre),
+    originalNationality: row.original_nationality ?? undefined,
     platform: row.platform,
     summary: row.summary,
     rating: row.rating,
@@ -253,13 +268,14 @@ export function rowToSeries(row: SeriesRow): Series {
     feelings: row.feelings as MovieFeeling[],
     favoriteCharacters: row.favorite_characters ?? undefined,
     favoriteEpisodes: row.favorite_episodes,
+    episodeWatchLogs: row.episode_watch_logs ?? [],
     bestMoments: row.best_moments,
     worstMoments: row.worst_moments,
     favouriteQuotes: row.favourite_quotes,
     posterUrl: row.poster_url ?? undefined,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
-  };
+  });
 }
 
 export function wishlistToRow(item: WishlistItem, userId: string): WishlistRow {
@@ -301,6 +317,7 @@ export function emptyData(): MediaTrackerData {
     bookOfYearBrackets: {},
     yearPixelLegends: {},
     notebookExportSettings: {},
+    dayNotes: {},
     readingGoal: 24,
   };
 }

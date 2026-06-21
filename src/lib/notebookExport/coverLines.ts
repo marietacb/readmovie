@@ -14,7 +14,7 @@ function seeded(seed: number): () => number {
   };
 }
 
-/** Trazos orgánicos alrededor del centro, uno por libro. */
+/** Trazos orgánicos alrededor del centro — varios trazos por libro para densidad scrapbook. */
 export function generateCoverLinePaths(
   lineStyles: BookLineStyle[],
   width: number,
@@ -25,23 +25,28 @@ export function generateCoverLinePaths(
   const paths: CoverLinePath[] = [];
 
   lineStyles.forEach((style, index) => {
-    const rand = seeded(index * 9973 + 42);
-    const angle = rand() * Math.PI * 2;
-    const radius = 80 + rand() * 120;
-    const startX = cx + Math.cos(angle) * radius * 0.3;
-    const startY = cy + Math.sin(angle) * radius * 0.3;
-    const cp1x = startX + (rand() - 0.5) * 180;
-    const cp1y = startY + (rand() - 0.5) * 180;
-    const cp2x = cx + (rand() - 0.5) * 160;
-    const cp2y = cy + (rand() - 0.5) * 160;
-    const endX = cx + (rand() - 0.5) * 100;
-    const endY = cy + (rand() - 0.5) * 100;
+    const strokesPerBook = style.rating >= 4 ? 3 : style.rating >= 2 ? 2 : 1;
 
-    paths.push({
-      d: `M ${startX.toFixed(1)} ${startY.toFixed(1)} C ${cp1x.toFixed(1)} ${cp1y.toFixed(1)}, ${cp2x.toFixed(1)} ${cp2y.toFixed(1)}, ${endX.toFixed(1)} ${endY.toFixed(1)}`,
-      color: style.color,
-      strokeWidth: style.strokeWidth,
-    });
+    for (let s = 0; s < strokesPerBook; s++) {
+      const rand = seeded(index * 9973 + s * 131 + 42);
+      const angle = rand() * Math.PI * 2;
+      const radius = 60 + rand() * 200;
+      const startX = cx + Math.cos(angle) * radius;
+      const startY = cy + Math.sin(angle) * radius;
+      const cp1x = startX + (rand() - 0.5) * 220;
+      const cp1y = startY + (rand() - 0.5) * 220;
+      const cp2x = cx + (rand() - 0.5) * 180;
+      const cp2y = cy + (rand() - 0.5) * 180;
+      const endX = cx + (rand() - 0.5) * 140;
+      const endY = cy + (rand() - 0.5) * 140;
+      const wobble = 0.75 + rand() * 0.5;
+
+      paths.push({
+        d: `M ${startX.toFixed(1)} ${startY.toFixed(1)} C ${cp1x.toFixed(1)} ${cp1y.toFixed(1)}, ${cp2x.toFixed(1)} ${cp2y.toFixed(1)}, ${endX.toFixed(1)} ${endY.toFixed(1)}`,
+        color: style.color,
+        strokeWidth: style.strokeWidth * wobble,
+      });
+    }
   });
 
   return paths;

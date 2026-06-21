@@ -1,0 +1,296 @@
+/* Cuaderno exportable — estética scrapbook / bullet journal */
+
+.nb-export-root {
+  --nb-page-w: 794px;
+  --nb-page-h: 1123px;
+  --nb-ink: #1a2f4b;
+  --nb-muted: #6b7c93;
+  --nb-highlight: rgba(232, 120, 120, 0.42);
+  --nb-dot: #d4d0c8;
+  --nb-cream: #faf8f5;
+  --nb-parchment: #f5ede0;
+}
+
+.nb-export-page {
+  width: var(--nb-page-w);
+  height: var(--nb-page-h);
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+  box-sizing: border-box;
+  background-color: var(--nb-cream);
+  color: var(--nb-ink);
+  font-family: var(--font-inter), system-ui, sans-serif;
+}
+
+.nb-export-page--dots {
+  background-color: #fff;
+  background-image: radial-gradient(circle, var(--nb-dot) 1px, transparent 1px);
+  background-size: 18px 18px;
+}
+
+.nb-export-page--parchment {
+  background: linear-gradient(145deg, #f8f0e4 0%, #ebe0cc 50%, #f5ede0 100%);
+}
+
+.nb-export-page__inner {
+  position: relative;
+  z-index: 1;
+  height: 100%;
+  padding: 40px 44px;
+  box-sizing: border-box;
+}
+
+/* Letras tipo revista / recortes */
+.nb-magazine {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  line-height: 1.1;
+}
+
+.nb-magazine__char {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0.55em;
+  padding: 2px 5px;
+  font-weight: 700;
+  color: #fff;
+  transform: rotate(var(--nb-rot, 0deg));
+  box-shadow: 1px 2px 0 rgba(0, 0, 0, 0.15);
+}
+
+.nb-magazine--lg .nb-magazine__char {
+  font-size: 38px;
+  padding: 4px 10px;
+  border-radius: 3px;
+}
+
+.nb-magazine--md .nb-magazine__char {
+  font-size: 16px;
+  padding: 2px 6px;
+  border-radius: 2px;
+}
+
+.nb-magazine--sm .nb-magazine__char {
+  font-size: 11px;
+  padding: 1px 4px;
+}
+
+/* Año portada — recortes negros */
+.nb-year-tiles {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+}
+
+.nb-year-tile {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 64px;
+  background: #111;
+  border-radius: 6px;
+  font-family: var(--font-playfair), Georgia, serif;
+  font-size: 42px;
+  font-weight: 700;
+  color: #f7f5f2;
+  box-shadow: 2px 3px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Rotulador rosa en etiquetas scrapbook */
+.nb-label {
+  display: inline;
+  font-family: "Caveat", cursive;
+  font-size: 15px;
+  font-weight: 600;
+  color: #c45c5c;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: linear-gradient(
+    transparent 35%,
+    var(--nb-highlight) 35%,
+    var(--nb-highlight) 88%,
+    transparent 88%
+  );
+}
+
+.nb-value {
+  font-family: var(--font-inter), system-ui, sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--nb-ink);
+  line-height: 1.45;
+}
+
+.nb-hand {
+  font-family: "Caveat", cursive;
+  font-size: 18px;
+  color: var(--nb-ink);
+}
+
+.nb-typewriter {
+  font-family: "Special Elite", "Courier New", monospace;
+  font-size: 10px;
+  letter-spacing: 0.02em;
+}
+
+.nb-serif-title {
+  font-family: var(--font-playfair), Georgia, serif;
+  font-weight: 700;
+  color: var(--nb-ink);
+}
+
+/* Estrellas */
+.nb-stars {
+  display: flex;
+  gap: 2px;
+  letter-spacing: 0;
+}
+
+.nb-stars__star {
+  font-size: 12px;
+  line-height: 1;
+}
+
+.nb-stars__star--on {
+  color: #f5c518;
+}
+
+.nb-stars__star--off {
+  color: #ddd;
+}
+
+/* Tablas */
+.nb-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 9px;
+}
+
+.nb-table th,
+.nb-table td {
+  border-bottom: 1px solid #d8d2c8;
+  padding: 4px 5px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.nb-table th {
+  font-family: "Caveat", cursive;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  border-bottom-width: 2px;
+  border-color: var(--nb-ink);
+}
+
+.nb-table .nb-empty {
+  color: #b0b8c4;
+}
+
+/* Pixels */
+.nb-pixel-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 11px);
+  gap: 1px;
+}
+
+.nb-pixel {
+  width: 11px;
+  height: 11px;
+  border: 0.5px solid rgba(0, 0, 0, 0.06);
+  box-sizing: border-box;
+}
+
+.nb-pixel--invalid {
+  background: transparent;
+  border-color: transparent;
+}
+
+/* Tracker grid */
+.nb-tracker-grid {
+  display: grid;
+  grid-template-columns: repeat(10, 24px);
+  gap: 3px;
+}
+
+.nb-tracker-cell {
+  width: 24px;
+  height: 24px;
+  border: 1.5px solid var(--nb-ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 8px;
+  font-weight: 600;
+}
+
+/* Scrapbook entry */
+.nb-scrapbook-entry {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px dashed #e0d8cc;
+}
+
+.nb-scrapbook-entry--reverse {
+  flex-direction: row-reverse;
+}
+
+.nb-cover-thumb {
+  width: 58px;
+  flex-shrink: 0;
+}
+
+.nb-cover-thumb img,
+.nb-cover-thumb__placeholder {
+  width: 54px;
+  height: 78px;
+  object-fit: cover;
+  border: 1.5px solid rgba(26, 47, 75, 0.15);
+  border-radius: 2px;
+  box-shadow: 2px 3px 6px rgba(0, 0, 0, 0.08);
+}
+
+/* Pegatinas */
+.nb-sticker {
+  object-fit: contain;
+  pointer-events: none;
+}
+
+/* Portada SVG */
+.nb-cover-art {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nb-cover-year {
+  position: relative;
+  z-index: 2;
+}
+
+/* Vista previa en app */
+.nb-preview-scaler {
+  overflow: auto;
+  max-height: 80vh;
+  border-radius: 12px;
+  border: 1px solid #e5e0d8;
+  background: #e8e4dc;
+  padding: 16px;
+}
+
+.nb-preview-scaler__inner {
+  transform-origin: top center;
+  margin: 0 auto;
+}

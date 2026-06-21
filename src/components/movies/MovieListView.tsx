@@ -1,6 +1,7 @@
 "use client";
 
 import { Plus, Star, Film } from "lucide-react";
+import { formatGenres } from "@/lib/genres";
 import { MOVIE_FEELINGS } from "@/lib/constants";
 import type { Movie } from "@/types";
 
@@ -58,7 +59,8 @@ export function MovieListView({ movies, onMovieClick, onNewMovie }: MovieListVie
                 <p className="font-semibold text-bj-navy">{movie.title}</p>
                 <p className="text-sm text-bj-muted">
                   {movie.director && `${movie.director} · `}
-                  {movie.genre}
+                  {formatGenres(movie.genres)}
+                  {movie.originalNationality && ` · ${movie.originalNationality}`}
                 </p>
                 {movie.watchDate && (
                   <p className="text-xs text-bj-muted">

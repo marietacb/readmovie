@@ -1,12 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Trash2, Save } from "lucide-react";
 import { useMediaTracker } from "@/context/MediaTrackerContext";
 import { MOVIE_FEELINGS, SERIES_STATUSES } from "@/lib/constants";
 import { RatingIcons } from "@/components/ui/RatingIcons";
+import { GenreTagsInput } from "@/components/ui/GenreTagsInput";
+import { normalizeGenres } from "@/lib/genres";
 import { TagCheckbox } from "@/components/ui/TagCheckbox";
 import type { MovieFeeling, Series, SeriesStatus } from "@/types";
+import { countUniqueEpisodes } from "@/lib/episodeWatchLogs";
+import { SeriesEpisodeJournal } from "@/components/series/SeriesEpisodeJournal";
 
 interface SeriesReviewFormProps {
   seriesId?: string;
@@ -17,7 +21,8 @@ interface SeriesReviewFormProps {
 const EMPTY_FORM = {
   title: "",
   creator: "",
-  genre: "",
+  genres: [] as string[],
+  originalNationality: "",
   platform: "",
   summary: "",
   rating: 0,
@@ -83,7 +88,8 @@ function seriesToForm(item: Series) {
   return {
     title: item.title,
     creator: item.creator,
-    genre: item.genre,
+    genres: item.genres,
+    originalNationality: item.originalNationality ?? "",
     platform: item.platform,
     summary: item.summary,
     rating: item.rating,
@@ -108,6 +114,16 @@ export function SeriesReviewForm({ seriesId, onSaved, onDeleted }: SeriesReviewF
   const item = seriesId ? getSeries(seriesId) : undefined;
   const [form, setForm] = useState(() => (item ? seriesToForm(item) : EMPTY_FORM));
 
+  useEffect(() => {
+    if (!item || (item.episodeWatchLogs?.length ?? 0) === 0) return;
+    const synced = String(
+      item.episodesWatched ?? countUniqueEpisodes(item.episodeWatchLogs),
+    );
+    setForm((prev) =>
+      prev.episodesWatched === synced ? prev : { ...prev, episodesWatched: synced },
+    );
+  }, [item?.id, item?.episodesWatched, item?.episodeWatchLogs]);
+
   const set = <K extends keyof typeof form>(key: K, value: (typeof form)[K]) =>
     setForm((prev) => ({ ...prev, [key]: value }));
 
@@ -128,17 +144,24 @@ export function SeriesReviewForm({ seriesId, onSaved, onDeleted }: SeriesReviewF
   const handleSave = () => {
     if (!form.title.trim()) return;
 
+    const logs = item?.episodeWatchLogs ?? [];
+    const episodesWatched =
+      logs.length > 0
+        ? countUniqueEpisodes(logs)
+        : parseOptionalNumber(form.episodesWatched);
+
     const data = {
       title: form.title.trim(),
       creator: form.creator.trim(),
-      genre: form.genre.trim(),
+      genres: normalizeGenres(form.genres),
+      originalNationality: form.originalNationality.trim() || undefined,
       platform: form.platform.trim(),
       summary: form.summary.trim(),
       rating: form.rating,
       status: form.status,
       seasons: parseOptionalNumber(form.seasons),
       totalEpisodes: parseOptionalNumber(form.totalEpisodes),
-      episodesWatched: parseOptionalNumber(form.episodesWatched),
+      episodesWatched,
       startDate: form.startDate || undefined,
       endDate: form.endDate || undefined,
       feelings: form.feelings,
@@ -148,6 +171,7 @@ export function SeriesReviewForm({ seriesId, onSaved, onDeleted }: SeriesReviewF
       worstMoments: form.worstMoments.filter((m) => m.trim()),
       favouriteQuotes: form.favouriteQuotes.filter((q) => q.trim()),
       posterUrl: form.posterUrl || undefined,
+      episodeWatchLogs: logs,
     };
 
     if (seriesId) {
@@ -186,8 +210,19 @@ export function SeriesReviewForm({ seriesId, onSaved, onDeleted }: SeriesReviewF
           <FormField label="Creador/a">
             <input value={form.creator} onChange={(e) => set("creator", e.target.value)} className="bj-input" />
           </FormField>
-          <FormField label="Género">
-            <input value={form.genre} onChange={(e) => set("genre", e.target.value)} className="bj-input" />
+          <FormField label="Géneros">
+            <GenreTagsInput
+              value={form.genres}
+              onChange={(genres) => set("genres", genres)}
+            />
+          </FormField>
+          <FormField label="Nacionalidad original">
+            <input
+              value={form.originalNationality}
+              onChange={(e) => set("originalNationality", e.target.value)}
+              placeholder="Ej. Estados Unidos, España"
+              className="bj-input"
+            />
           </FormField>
           <FormField label="Plataforma">
             <input
@@ -255,12 +290,19 @@ export function SeriesReviewForm({ seriesId, onSaved, onDeleted }: SeriesReviewF
             min={0}
             value={form.episodesWatched}
             onChange={(e) => set("episodesWatched", e.target.value)}
-            className="bj-input"
+            disabled={(item?.episodeWatchLogs?.length ?? 0) > 0}
+            className="bj-input disabled:cursor-not-allowed disabled:opacity-60"
           />
+          {item && (item.episodeWatchLogs?.length ?? 0) > 0 && (
+            <p className="mt-1 text-xs text-bj-muted">
+              Se calcula automáticamente desde el diario de episodios (
+              {item.episodeWatchLogs?.length} registros).
+            </p>
+          )}
         </FormField>
       </div>
 
-      <div className="mt-4 grid gap-4 sm:grid-cols-2">
+      <div className="mt-6 grid gap-4 sm:grid-cols-2">
         <FormField label="Fecha de inicio">
           <input type="date" value={form.startDate} onChange={(e) => set("startDate", e.target.value)} className="bj-input" />
         </FormField>
@@ -268,6 +310,8 @@ export function SeriesReviewForm({ seriesId, onSaved, onDeleted }: SeriesReviewF
           <input type="date" value={form.endDate} onChange={(e) => set("endDate", e.target.value)} className="bj-input" />
         </FormField>
       </div>
+
+      {item && <SeriesEpisodeJournal key={item.id} series={item} />}
 
       <div className="mt-6 rounded-xl border border-bj-border bg-bj-surface/30 p-5">
         <span className="mb-3 block text-xs font-semibold uppercase tracking-wide text-bj-muted">

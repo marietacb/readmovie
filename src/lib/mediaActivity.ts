@@ -72,6 +72,18 @@ export function getActivityEvents(
   });
 
   series.forEach((item) => {
+    (item.episodeWatchLogs ?? []).forEach((log) => {
+      events.push({
+        id: `series-ep-${log.id}`,
+        kind: "series",
+        date: dateKey(log.date),
+        title: item.title,
+        subtitle: item.creator,
+        detail: `T${log.season} E${log.episode}${log.note ? ` · ${log.note}` : ""}`,
+        seriesId: item.id,
+      });
+    });
+
     if (item.startDate) {
       events.push({
         id: `series-start-${item.id}`,

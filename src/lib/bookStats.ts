@@ -16,7 +16,9 @@ export function getFinishedThisYear(books: Book[]): Book[] {
 
 export function getGenreStats(books: Book[]): { genre: string; count: number }[] {
   const map = books.reduce<Record<string, number>>((acc, b) => {
-    if (b.genre) acc[b.genre] = (acc[b.genre] || 0) + 1;
+    b.genres.forEach((genre) => {
+      acc[genre] = (acc[genre] || 0) + 1;
+    });
     return acc;
   }, {});
   return Object.entries(map)

@@ -13,7 +13,9 @@ export function getSeriesFinishedInYear(series: Series[], year: number): Series[
 
 export function getSeriesGenreStats(series: Series[]): { genre: string; count: number }[] {
   const map = series.reduce<Record<string, number>>((acc, item) => {
-    if (item.genre) acc[item.genre] = (acc[item.genre] || 0) + 1;
+    item.genres.forEach((genre) => {
+      acc[genre] = (acc[genre] || 0) + 1;
+    });
     return acc;
   }, {});
   return Object.entries(map)

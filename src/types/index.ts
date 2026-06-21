@@ -44,7 +44,9 @@ export interface Book {
   startDate?: string;
   endDate?: string;
   publisher?: string;
-  genre?: string;
+  genres: string[];
+  /** País o países de origen de la obra (ej. España, Japón) */
+  originalNationality?: string;
   publishYear?: number;
   storyType: StoryType[];
   characters?: string;
@@ -97,6 +99,9 @@ export interface NotebookExportSettings {
 
 export type YearlyNotebookExportSettings = Record<number, NotebookExportSettings>;
 
+/** Nota breve opcional por día (YYYY-MM-DD) — Year in Pixels, calendario… */
+export type DayNotes = Record<string, string>;
+
 /** Entrada de lista de deseos (checklist del cuaderno) */
 export interface WishlistItem {
   id: string;
@@ -125,7 +130,8 @@ export interface Movie {
   id: string;
   title: string;
   director: string;
-  genre: string;
+  genres: string[];
+  originalNationality?: string;
   summary: string;
   rating: number;
   feelings: MovieFeeling[];
@@ -142,11 +148,21 @@ export interface Movie {
 
 export type SeriesStatus = "watching" | "completed" | "dropped" | "plan_to_watch";
 
+/** Visionado de un episodio en una fecha (puede repetirse en días distintos). */
+export interface EpisodeWatchLog {
+  id: string;
+  date: string;
+  season: number;
+  episode: number;
+  note?: string;
+}
+
 export interface Series {
   id: string;
   title: string;
   creator: string;
-  genre: string;
+  genres: string[];
+  originalNationality?: string;
   platform: string;
   summary: string;
   rating: number;
@@ -159,6 +175,7 @@ export interface Series {
   feelings: MovieFeeling[];
   favoriteCharacters?: string;
   favoriteEpisodes: string[];
+  episodeWatchLogs: EpisodeWatchLog[];
   bestMoments: string[];
   worstMoments: string[];
   favouriteQuotes: string[];
@@ -190,6 +207,7 @@ export interface MediaTrackerData {
   bookOfYearBrackets: YearlyBookOfYearBrackets;
   yearPixelLegends: YearlyPixelLegends;
   notebookExportSettings: YearlyNotebookExportSettings;
+  dayNotes: DayNotes;
   readingGoal: number;
 }
 

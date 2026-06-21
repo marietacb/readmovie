@@ -1,6 +1,7 @@
 "use client";
 
 import { Plus, Star, Tv } from "lucide-react";
+import { formatGenres } from "@/lib/genres";
 import { MOVIE_FEELINGS, SERIES_STATUSES } from "@/lib/constants";
 import type { Series, SeriesStatus } from "@/types";
 import { cn } from "@/lib/utils";
@@ -102,7 +103,8 @@ export function SeriesListView({
                 <p className="font-semibold text-bj-navy">{item.title}</p>
                 <p className="text-sm text-bj-muted">
                   {item.creator && `${item.creator} · `}
-                  {item.genre}
+                  {formatGenres(item.genres)}
+                  {item.originalNationality && ` · ${item.originalNationality}`}
                   {item.platform && ` · ${item.platform}`}
                 </p>
                 <span className="mt-1 inline-block rounded-full bg-bj-navy/5 px-2 py-0.5 text-[10px] text-bj-muted">

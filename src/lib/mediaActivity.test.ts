@@ -27,7 +27,7 @@ describe("mediaActivity", () => {
         id: "m1",
         title: "Inception",
         director: "Nolan",
-        genre: "Sci-fi",
+        genres: ["Sci-fi"],
         summary: "",
         rating: 5,
         feelings: [],
@@ -44,13 +44,14 @@ describe("mediaActivity", () => {
         id: "sr1",
         title: "The Bear",
         creator: "Creator",
-        genre: "Drama",
+        genres: ["Drama"],
         platform: "Disney+",
         summary: "",
         rating: 4,
         status: "completed",
         feelings: [],
         favoriteEpisodes: [],
+        episodeWatchLogs: [],
         bestMoments: [],
         worstMoments: [],
         favouriteQuotes: [],
@@ -63,5 +64,39 @@ describe("mediaActivity", () => {
     const events = getActivityEvents(books, movies, series);
     expect(getEventsForDate(events, "2026-03-01").length).toBeGreaterThanOrEqual(2);
     expect(getEventsForDate(events, "2026-03-02").some((e) => e.kind === "series")).toBe(true);
+  });
+
+  it("incluye visionados de episodios por día en el calendario", () => {
+    const series: Series[] = [
+      {
+        id: "sr1",
+        title: "Severance",
+        creator: "Erickson",
+        genres: ["Thriller"],
+        platform: "Apple TV+",
+        summary: "",
+        rating: 5,
+        status: "watching",
+        feelings: [],
+        favoriteEpisodes: [],
+        episodeWatchLogs: [
+          { id: "log1", date: "2026-04-01", season: 1, episode: 3 },
+          { id: "log2", date: "2026-04-01", season: 1, episode: 4, note: "noche larga" },
+          { id: "log3", date: "2026-04-10", season: 1, episode: 3 },
+        ],
+        bestMoments: [],
+        worstMoments: [],
+        favouriteQuotes: [],
+        createdAt: "2026-01-01",
+        updatedAt: "2026-01-01",
+      },
+    ];
+
+    const events = getActivityEvents([], [], series);
+    const dayEvents = getEventsForDate(events, "2026-04-01");
+
+    expect(dayEvents.filter((e) => e.id.startsWith("series-ep-"))).toHaveLength(2);
+    expect(dayEvents.some((e) => e.detail?.includes("noche larga"))).toBe(true);
+    expect(getEventsForDate(events, "2026-04-10")).toHaveLength(1);
   });
 });

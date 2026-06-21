@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Star } from "lucide-react";
+import { Star, StickyNote } from "lucide-react";
 import { PanelHeader } from "@/components/ui/PanelHeader";
 import { YearPixelDayEditor } from "@/components/books/YearPixelDayEditor";
 import { YearPixelLegendEditor } from "@/components/books/YearPixelLegendEditor";
@@ -22,7 +22,7 @@ interface YearInPixelsViewProps {
 }
 
 export function YearInPixelsView({ books, year }: YearInPixelsViewProps) {
-  const { yearPixelLegends } = useMediaTracker();
+  const { yearPixelLegends, dayNotes } = useMediaTracker();
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const bands = useMemo(
     () => resolvePixelLegend(yearPixelLegends, year),
@@ -47,7 +47,7 @@ export function YearInPixelsView({ books, year }: YearInPixelsViewProps) {
       <div className="mb-6">
         <PanelHeader
           title="Year in Pixels"
-          subtitle="Haz clic en un día para editar las páginas · la estrella marca cuando terminaste un libro"
+          subtitle="Haz clic en un día para editar páginas y añadir una nota · la estrella marca cuando terminaste un libro"
         />
       </div>
 
@@ -90,10 +90,13 @@ export function YearInPixelsView({ books, year }: YearInPixelsViewProps) {
                   <span className="text-right text-[10px] font-medium text-bj-muted">{day}</span>
                   {row.map((cell) => {
                     const hasStar = cell.finishedBooks.length > 0;
+                    const dayNote = dayNotes[cell.date];
+                    const hasNote = Boolean(dayNote?.trim());
                     const isSelected = selectedDate === cell.date;
                     const titleParts: string[] = [];
                     if (cell.valid) {
                       if (cell.pages > 0) titleParts.push(`${cell.pages} págs.`);
+                      if (hasNote) titleParts.push(dayNote!);
                       if (hasStar) {
                         titleParts.push(
                           `Terminado: ${cell.finishedBooks.map((b) => b.title).join(", ")}`
@@ -123,6 +126,12 @@ export function YearInPixelsView({ books, year }: YearInPixelsViewProps) {
                         {hasStar && (
                           <Star
                             className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 fill-amber-400 text-amber-500 drop-shadow-sm"
+                            aria-hidden
+                          />
+                        )}
+                        {hasNote && !hasStar && (
+                          <StickyNote
+                            className="absolute -right-0.5 -bottom-0.5 h-2.5 w-2.5 text-bj-terracotta drop-shadow-sm"
                             aria-hidden
                           />
                         )}
@@ -166,6 +175,10 @@ export function YearInPixelsView({ books, year }: YearInPixelsViewProps) {
           <div className="flex items-center gap-2">
             <Star className="h-4 w-4 fill-amber-400 text-amber-500" />
             <span className="text-xs text-bj-muted">Libro terminado</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <StickyNote className="h-4 w-4 text-bj-terracotta" />
+            <span className="text-xs text-bj-muted">Nota del día</span>
           </div>
         </div>
       </div>

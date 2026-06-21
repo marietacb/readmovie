@@ -1,5 +1,6 @@
 "use client";
 
+import { formatGenres } from "@/lib/genres";
 import { getGenreSpineColor } from "@/lib/genreColors";
 import type { Book } from "@/types";
 
@@ -11,13 +12,13 @@ interface VisualBookshelfProps {
 }
 
 function BookSpine({ book, onClick }: { book: Book; onClick: () => void }) {
-  const color = getGenreSpineColor(book.genre, book.spineColor);
+  const color = getGenreSpineColor(book.genres, book.spineColor);
 
   return (
     <button
       type="button"
       onClick={onClick}
-      title={`${book.title} — ${book.author}${book.genre ? ` (${book.genre})` : ""}`}
+      title={`${book.title} — ${book.author}${book.genres.length ? ` (${formatGenres(book.genres)})` : ""}`}
       className="group relative flex h-36 w-8 shrink-0 flex-col items-center justify-end overflow-hidden rounded-sm border border-black/15 shadow-md transition-all hover:-translate-y-2 hover:shadow-lg sm:h-40 sm:w-9"
       style={{ backgroundColor: color }}
     >

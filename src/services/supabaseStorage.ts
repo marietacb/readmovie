@@ -3,6 +3,7 @@ import { normalizeBooks } from "@/lib/normalizeBook";
 import { normalizeYearlyBookOfYearBrackets } from "@/lib/yearlyBrackets";
 import { normalizeYearPixelLegends } from "@/lib/pixelLegends";
 import { normalizeYearlyMonthlyFavorites } from "@/lib/yearlyFavorites";
+import { normalizeDayNotes } from "@/lib/dayNotes";
 import { normalizeYearlyNotebookExportSettings } from "@/lib/notebookExport/settings";
 import { createClient } from "@/lib/supabase/client";
 import type { MediaTrackerData, StorageService } from "@/types";
@@ -23,6 +24,36 @@ import {
   type WishlistRow,
 } from "./supabaseMappers";
 
+import type { PostgrestError, SupabaseClient } from "@supabase/supabase-js";
+
+async function upsertRowsWithColumnFallback(
+  supabase: SupabaseClient,
+  table: "books" | "movies" | "series",
+  rows: Record<string, unknown>[],
+  fallbackColumns: string[],
+): Promise<void> {
+  let currentRows = rows;
+  let error: PostgrestError | null = null;
+
+  for (let attempt = 0; attempt <= fallbackColumns.length; attempt += 1) {
+    ({ error } = await supabase.from(table).upsert(currentRows as never));
+    if (!error) return;
+
+    const missingColumn = fallbackColumns.find((column) =>
+      error?.message?.includes(column),
+    );
+    if (!missingColumn) break;
+
+    currentRows = currentRows.map((row) => {
+      const { [missingColumn]: _removed, ...rest } = row;
+      void _removed;
+      return rest;
+    });
+  }
+
+  if (error) throw error;
+}
+
 export class SupabaseStorageService implements StorageService {
   constructor(private userId: string) {}
 
@@ -32,10 +63,18 @@ export class SupabaseStorageService implements StorageService {
     let profileRes = await supabase
       .from("profiles")
       .select(
-        "reading_goal, monthly_favorites, book_of_year_brackets, year_pixel_legends, notebook_export_settings",
+        "reading_goal, monthly_favorites, book_of_year_brackets, year_pixel_legends, notebook_export_settings, day_notes",
       )
       .eq("id", this.userId)
       .maybeSingle();
+
+    if (profileRes.error?.message?.includes("day_notes")) {
+      profileRes = await supabase
+        .from("profiles")
+        .select("reading_goal, monthly_favorites, book_of_year_brackets, year_pixel_legends, notebook_export_settings")
+        .eq("id", this.userId)
+        .maybeSingle();
+    }
 
     if (profileRes.error?.message?.includes("notebook_export_settings")) {
       profileRes = await supabase
@@ -82,6 +121,7 @@ export class SupabaseStorageService implements StorageService {
         book_of_year_brackets: {},
         year_pixel_legends: {},
         notebook_export_settings: {},
+        day_notes: {},
       });
     }
 
@@ -115,6 +155,13 @@ export class SupabaseStorageService implements StorageService {
               : {}
           )
         : {},
+      dayNotes: profileRes.data
+        ? normalizeDayNotes(
+            "day_notes" in (profileRes.data ?? {})
+              ? (profileRes.data as { day_notes?: unknown }).day_notes ?? {}
+              : {}
+          )
+        : {},
       readingGoal: profileRes.data?.reading_goal ?? 24,
     };
   }
@@ -129,10 +176,16 @@ export class SupabaseStorageService implements StorageService {
       book_of_year_brackets: data.bookOfYearBrackets,
       year_pixel_legends: data.yearPixelLegends,
       notebook_export_settings: data.notebookExportSettings,
+      day_notes: data.dayNotes,
       updated_at: new Date().toISOString(),
     };
 
     let { error: profileError } = await supabase.from("profiles").upsert(profilePayload);
+    if (profileError?.message?.includes("day_notes")) {
+      const { day_notes: _notes, ...withoutNotes } = profilePayload;
+      void _notes;
+      ({ error: profileError } = await supabase.from("profiles").upsert(withoutNotes));
+    }
     if (profileError?.message?.includes("notebook_export_settings")) {
       const { notebook_export_settings: _settings, ...withoutSettings } = profilePayload;
       void _settings;
@@ -203,24 +256,30 @@ export class SupabaseStorageService implements StorageService {
     }
 
     if (data.books.length > 0) {
-      const { error } = await supabase
-        .from("books")
-        .upsert(data.books.map((b) => bookToRow(b, this.userId)));
-      if (error) throw error;
+      await upsertRowsWithColumnFallback(
+        supabase,
+        "books",
+        data.books.map((b) => bookToRow(b, this.userId) as unknown as Record<string, unknown>),
+        ["original_nationality"],
+      );
     }
 
     if (data.movies.length > 0) {
-      const { error } = await supabase
-        .from("movies")
-        .upsert(data.movies.map((m) => movieToRow(m, this.userId)));
-      if (error) throw error;
+      await upsertRowsWithColumnFallback(
+        supabase,
+        "movies",
+        data.movies.map((m) => movieToRow(m, this.userId) as unknown as Record<string, unknown>),
+        ["original_nationality"],
+      );
     }
 
     if (data.series.length > 0) {
-      const { error } = await supabase
-        .from("series")
-        .upsert(data.series.map((s) => seriesToRow(s, this.userId)));
-      if (error) throw error;
+      await upsertRowsWithColumnFallback(
+        supabase,
+        "series",
+        data.series.map((s) => seriesToRow(s, this.userId) as unknown as Record<string, unknown>),
+        ["episode_watch_logs", "original_nationality"],
+      );
     }
 
     if (data.wishlist.length > 0) {

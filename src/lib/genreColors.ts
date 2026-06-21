@@ -26,7 +26,16 @@ function hashString(value: string): number {
   return Math.abs(hash);
 }
 
-export function getGenreSpineColor(genre?: string, fallback = "#B8D4E8"): string {
+export function getGenreSpineColor(
+  genres?: string | string[],
+  fallback = "#B8D4E8",
+): string {
+  const list = Array.isArray(genres)
+    ? genres
+    : genres?.trim()
+      ? [genres]
+      : [];
+  const genre = list[0];
   if (!genre?.trim()) return fallback;
 
   const lower = genre.toLowerCase();

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Plus, Star, Trash2, X } from "lucide-react";
 import { useMediaTracker } from "@/context/MediaTrackerContext";
 import { buildSessionForPages, formatDateES } from "@/lib/readingStats";
@@ -14,16 +14,34 @@ interface YearPixelDayEditorProps {
 }
 
 export function YearPixelDayEditor({ books, date, onClose }: YearPixelDayEditorProps) {
-  const { addReadingSession, updateReadingSession, removeReadingSession } = useMediaTracker();
+  const {
+    addReadingSession,
+    updateReadingSession,
+    removeReadingSession,
+    getDayNote,
+    setDayNote,
+  } = useMediaTracker();
 
   const sessions = useMemo(() => getSessionsForDate(books, date), [books, date]);
   const finishedBooks = useMemo(() => getBooksFinishedOnDate(books, date), [books, date]);
+  const savedNote = getDayNote(date) ?? "";
 
   const [pendingEdits, setPendingEdits] = useState<Record<string, string>>({});
   const [newBookId, setNewBookId] = useState("");
   const [newPages, setNewPages] = useState("");
+  const [dayNote, setDayNoteLocal] = useState(savedNote);
+
+  useEffect(() => {
+    setDayNoteLocal(savedNote);
+  }, [date, savedNote]);
 
   const totalPages = sessions.reduce((sum, entry) => sum + entry.pages, 0);
+
+  const handleSaveDayNote = () => {
+    const trimmed = dayNote.trim();
+    if (trimmed === savedNote) return;
+    setDayNote(date, trimmed || null);
+  };
 
   const handleSavePages = (bookId: string, sessionId: string, fromPage: number) => {
     const raw = (pendingEdits[sessionId] ?? "").trim();
@@ -87,6 +105,22 @@ export function YearPixelDayEditor({ books, date, onClose }: YearPixelDayEditorP
         >
           <X className="h-4 w-4" />
         </button>
+      </div>
+
+      <div className="mb-4">
+        <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-bj-muted">
+          Nota del día
+        </label>
+        <textarea
+          value={dayNote}
+          onChange={(e) => setDayNoteLocal(e.target.value)}
+          onBlur={handleSaveDayNote}
+          placeholder="Algo que quieras recordar de este día (opcional)…"
+          rows={2}
+          maxLength={280}
+          className="bj-input resize-none text-sm"
+        />
+        <p className="mt-1 text-right text-[10px] text-bj-muted">{dayNote.length}/280</p>
       </div>
 
       {finishedBooks.length > 0 && (

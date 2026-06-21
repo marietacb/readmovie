@@ -5,6 +5,8 @@ import { Trash2, Save } from "lucide-react";
 import { useMediaTracker } from "@/context/MediaTrackerContext";
 import { MOVIE_FEELINGS } from "@/lib/constants";
 import { RatingIcons } from "@/components/ui/RatingIcons";
+import { GenreTagsInput } from "@/components/ui/GenreTagsInput";
+import { normalizeGenres } from "@/lib/genres";
 import { TagCheckbox } from "@/components/ui/TagCheckbox";
 import type { Movie, MovieFeeling } from "@/types";
 
@@ -17,7 +19,8 @@ interface MovieReviewFormProps {
 const EMPTY_FORM = {
   title: "",
   director: "",
-  genre: "",
+  genres: [] as string[],
+  originalNationality: "",
   summary: "",
   rating: 0,
   feelings: [] as MovieFeeling[],
@@ -75,7 +78,8 @@ function movieToForm(movie: Movie) {
   return {
     title: movie.title,
     director: movie.director,
-    genre: movie.genre,
+    genres: movie.genres,
+    originalNationality: movie.originalNationality ?? "",
     summary: movie.summary,
     rating: movie.rating,
     feelings: movie.feelings,
@@ -110,7 +114,8 @@ export function MovieReviewForm({ movieId, onSaved, onDeleted }: MovieReviewForm
     const data = {
       title: form.title.trim(),
       director: form.director.trim(),
-      genre: form.genre.trim(),
+      genres: normalizeGenres(form.genres),
+      originalNationality: form.originalNationality.trim() || undefined,
       summary: form.summary.trim(),
       rating: form.rating,
       feelings: form.feelings,
@@ -157,8 +162,19 @@ export function MovieReviewForm({ movieId, onSaved, onDeleted }: MovieReviewForm
           <FormField label="Director/a">
             <input value={form.director} onChange={(e) => set("director", e.target.value)} className="bj-input" />
           </FormField>
-          <FormField label="Género">
-            <input value={form.genre} onChange={(e) => set("genre", e.target.value)} className="bj-input" />
+          <FormField label="Géneros">
+            <GenreTagsInput
+              value={form.genres}
+              onChange={(genres) => set("genres", genres)}
+            />
+          </FormField>
+          <FormField label="Nacionalidad original">
+            <input
+              value={form.originalNationality}
+              onChange={(e) => set("originalNationality", e.target.value)}
+              placeholder="Ej. Francia, Corea del Sur"
+              className="bj-input"
+            />
           </FormField>
           <FormField label="Fecha de visionado">
             <input

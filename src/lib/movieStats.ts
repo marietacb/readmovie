@@ -9,7 +9,9 @@ export function getMoviesWatchedInYear(movies: Movie[], year: number): Movie[] {
 
 export function getMovieGenreStats(movies: Movie[]): { genre: string; count: number }[] {
   const map = movies.reduce<Record<string, number>>((acc, movie) => {
-    if (movie.genre) acc[movie.genre] = (acc[movie.genre] || 0) + 1;
+    movie.genres.forEach((genre) => {
+      acc[genre] = (acc[genre] || 0) + 1;
+    });
     return acc;
   }, {});
   return Object.entries(map)

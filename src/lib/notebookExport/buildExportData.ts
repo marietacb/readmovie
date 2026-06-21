@@ -107,7 +107,7 @@ export function buildNotebookExportPayload(input: {
 
 export function getTrackerSlotColor(book: Book | undefined, index: number): string {
   if (!book) return "#FFFFFF";
-  return getGenreSpineColor(book.genre, book.spineColor);
+  return getGenreSpineColor(book.genres, book.spineColor);
 }
 
 export function formatRatingDisplay(rating: BookRating): string {

@@ -1,4 +1,5 @@
 import { attachSessionsToBook, generateReadingSessionsFromBook, mergeSessionsIntoBook } from "@/lib/generateReadingSessions";
+import { readGenresFromEntity } from "@/lib/genres";
 import { buildSessionForPages, getLastPageBeforeDate } from "@/lib/readingStats";
 import { clampBookRating } from "@/lib/ratings";
 import { setMonthlyFavoriteForYear } from "@/lib/yearlyFavorites";
@@ -28,7 +29,9 @@ export interface ImportBookEntry {
   startDate?: string;
   endDate?: string;
   publisher?: string;
-  genre?: string;
+  genre?: string | string[];
+  genres?: string[];
+  originalNationality?: string;
   publishYear?: number;
   storyType?: StoryType[];
   seriesLabel?: string;
@@ -117,7 +120,8 @@ function buildBook(entry: ImportBookEntry, timestamp: string, withSessions: bool
     startDate: entry.startDate,
     endDate: entry.endDate,
     publisher: entry.publisher,
-    genre: entry.genre,
+    genres: readGenresFromEntity(entry),
+    originalNationality: entry.originalNationality?.trim() || undefined,
     publishYear: entry.publishYear,
     storyType: entry.storyType?.length ? entry.storyType : ["autoconclusivo"],
     seriesLabel: entry.seriesLabel,
@@ -315,7 +319,13 @@ export function parseNotebookImport(raw: unknown): NotebookImportPayload {
         startDate: item.startDate ? String(item.startDate) : undefined,
         endDate: item.endDate ? String(item.endDate) : undefined,
         publisher: item.publisher ? String(item.publisher) : undefined,
-        genre: item.genre ? String(item.genre) : undefined,
+        genres: readGenresFromEntity({
+          genres: item.genres,
+          genre: item.genre,
+        }),
+        originalNationality: item.originalNationality
+          ? String(item.originalNationality)
+          : undefined,
         publishYear: typeof item.publishYear === "number" ? item.publishYear : undefined,
         storyType: Array.isArray(item.storyType) ? (item.storyType as StoryType[]) : undefined,
         seriesLabel: item.seriesLabel ? String(item.seriesLabel) : undefined,

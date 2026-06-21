@@ -1,9 +1,12 @@
 import { clampBookRating } from "@/lib/ratings";
+import { readGenresFromEntity } from "@/lib/genres";
 import type { Book } from "@/types";
 
 export function normalizeBook(book: Book): Book {
   return {
     ...book,
+    genres: readGenresFromEntity(book),
+    originalNationality: book.originalNationality?.trim() || undefined,
     totalChapters: book.totalChapters ?? undefined,
     seriesLabel: book.seriesLabel ?? undefined,
     chapters: book.chapters ?? [],

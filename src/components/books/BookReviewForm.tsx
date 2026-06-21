@@ -6,7 +6,9 @@ import { useMediaTracker } from "@/context/MediaTrackerContext";
 import { BOOK_FORMATS, STORY_TYPES } from "@/lib/constants";
 import { clampBookRating } from "@/lib/ratings";
 import { RatingIcons } from "@/components/ui/RatingIcons";
+import { GenreTagsInput } from "@/components/ui/GenreTagsInput";
 import { TagCheckbox } from "@/components/ui/TagCheckbox";
+import { normalizeGenres } from "@/lib/genres";
 import { ChapterMarkersEditor } from "@/components/books/ChapterMarkersEditor";
 import { BookReadingJournal } from "@/components/books/BookReadingJournal";
 import { BookSummaryView } from "@/components/books/BookSummaryView";
@@ -34,7 +36,8 @@ const EMPTY_FORM = {
   startDate: "",
   endDate: "",
   publisher: "",
-  genre: "",
+  genres: [] as string[],
+  originalNationality: "",
   publishYear: "",
   storyType: [] as StoryType[],
   seriesLabel: "",
@@ -67,7 +70,8 @@ function bookToForm(b: Book) {
     startDate: b.startDate ?? "",
     endDate: b.endDate ?? "",
     publisher: b.publisher ?? "",
-    genre: b.genre ?? "",
+    genres: b.genres,
+    originalNationality: b.originalNationality ?? "",
     publishYear: b.publishYear?.toString() ?? "",
     storyType: b.storyType,
     seriesLabel: b.seriesLabel ?? "",
@@ -134,7 +138,8 @@ export function BookReviewForm({
     startDate: form.startDate || undefined,
     endDate: form.endDate || undefined,
     publisher: form.publisher || undefined,
-    genre: form.genre || undefined,
+    genres: normalizeGenres(form.genres),
+    originalNationality: form.originalNationality.trim() || undefined,
     publishYear: form.publishYear ? parseInt(form.publishYear) : undefined,
     storyType: form.storyType,
     seriesLabel: form.seriesLabel.trim() || undefined,
@@ -251,8 +256,19 @@ export function BookReviewForm({
                   className="bj-input"
                 />
               </FormField>
-              <FormField label="Género">
-                <input value={form.genre} onChange={(e) => set("genre", e.target.value)} className="bj-input" />
+              <FormField label="Géneros">
+                <GenreTagsInput
+                  value={form.genres}
+                  onChange={(genres) => set("genres", genres)}
+                />
+              </FormField>
+              <FormField label="Nacionalidad original">
+                <input
+                  value={form.originalNationality}
+                  onChange={(e) => set("originalNationality", e.target.value)}
+                  placeholder="Ej. España, Japón, Reino Unido"
+                  className="bj-input"
+                />
               </FormField>
               <FormField label="Serie / saga">
                 <input

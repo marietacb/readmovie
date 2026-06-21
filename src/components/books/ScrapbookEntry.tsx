@@ -2,6 +2,7 @@
 
 import { BookOpen } from "lucide-react";
 import { BOOK_FORMATS } from "@/lib/constants";
+import { formatGenres } from "@/lib/genres";
 import { StarRatingDisplay } from "@/components/ui/StarRatingDisplay";
 import { formatDate } from "@/lib/utils";
 import type { Book } from "@/types";
@@ -82,7 +83,8 @@ export function ScrapbookEntry({ book, index, onClick }: ScrapbookEntryProps) {
           <FieldRow label="Book" value={book.title} />
           <FieldRow label="Author" value={book.author} />
           <FieldRow label="Format" value={formatStr} />
-          <FieldRow label="Genre" value={book.genre} />
+          <FieldRow label="Genre" value={formatGenres(book.genres) || undefined} />
+          <FieldRow label="Nationality" value={book.originalNationality} />
           {book.seriesLabel && <FieldRow label="Series" value={book.seriesLabel} />}
           <FieldRow label="Pages" value={book.pages?.toString()} />
           {dateRange && <FieldRow label="Dates" value={dateRange} />}

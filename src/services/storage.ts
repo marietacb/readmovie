@@ -3,6 +3,9 @@ import { normalizeBooks } from "@/lib/normalizeBook";
 import { normalizeYearlyBookOfYearBrackets } from "@/lib/yearlyBrackets";
 import { normalizeYearPixelLegends } from "@/lib/pixelLegends";
 import { normalizeYearlyMonthlyFavorites } from "@/lib/yearlyFavorites";
+import { normalizeMovies } from "@/lib/normalizeMovie";
+import { normalizeSeriesList } from "@/lib/normalizeSeries";
+import { normalizeDayNotes } from "@/lib/dayNotes";
 import { normalizeYearlyNotebookExportSettings } from "@/lib/notebookExport/settings";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import type { MediaTrackerData, StorageService } from "@/types";
@@ -17,6 +20,7 @@ const DEFAULT_DATA: MediaTrackerData = {
   bookOfYearBrackets: {},
   yearPixelLegends: {},
   notebookExportSettings: {},
+  dayNotes: {},
   readingGoal: 24,
 };
 
@@ -35,8 +39,8 @@ export class LocalStorageService implements StorageService {
       const parsed = JSON.parse(raw) as Partial<MediaTrackerData>;
       return {
         books: normalizeBooks(parsed.books ?? []),
-        movies: parsed.movies ?? [],
-        series: parsed.series ?? [],
+        movies: normalizeMovies(parsed.movies ?? []),
+        series: normalizeSeriesList(parsed.series ?? []),
         wishlist: parsed.wishlist ?? [],
         monthlyFavorites: normalizeYearlyMonthlyFavorites(parsed.monthlyFavorites),
         bookOfYearBrackets: normalizeYearlyBookOfYearBrackets(parsed.bookOfYearBrackets),
@@ -44,6 +48,7 @@ export class LocalStorageService implements StorageService {
         notebookExportSettings: normalizeYearlyNotebookExportSettings(
           parsed.notebookExportSettings,
         ),
+        dayNotes: normalizeDayNotes(parsed.dayNotes),
         readingGoal: parsed.readingGoal ?? 24,
       };
     } catch {

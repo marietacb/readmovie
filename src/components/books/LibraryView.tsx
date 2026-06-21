@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { Search, BookOpen, LayoutGrid, List } from "lucide-react";
 import { formatDate } from "@/lib/utils";
+import { formatGenres, genresMatchQuery } from "@/lib/genres";
 import { StarRatingDisplay } from "@/components/ui/StarRatingDisplay";
 import { ScrapbookListView } from "@/components/books/ScrapbookListView";
 import type { Book } from "@/types";
@@ -27,7 +28,8 @@ export function LibraryView({ books, onBookClick, onNewBook }: LibraryViewProps)
       (b) =>
         b.title.toLowerCase().includes(q) ||
         b.author.toLowerCase().includes(q) ||
-        b.genre?.toLowerCase().includes(q)
+        genresMatchQuery(b.genres, q) ||
+        b.originalNationality?.toLowerCase().includes(q)
     );
   }, [books, query]);
 
@@ -118,9 +120,9 @@ export function LibraryView({ books, onBookClick, onNewBook }: LibraryViewProps)
               <div className="min-w-0 flex-1">
                 <p className="truncate font-semibold text-bj-navy">{book.title}</p>
                 <p className="truncate text-sm text-bj-muted">{book.author}</p>
-                {book.genre && (
+                {book.genres.length > 0 && (
                   <span className="mt-1 inline-block rounded-full bg-bj-navy/5 px-2 py-0.5 text-[10px] text-bj-muted">
-                    {book.genre}
+                    {formatGenres(book.genres)}
                   </span>
                 )}
               </div>

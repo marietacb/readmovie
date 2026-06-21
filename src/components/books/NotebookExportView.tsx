@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { Download, ImageIcon, Loader2 } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Caveat, Special_Elite } from "next/font/google";
+import { Download, Eye, ImageIcon, Loader2 } from "lucide-react";
 import { PanelHeader } from "@/components/ui/PanelHeader";
 import { YearSelector } from "@/components/ui/YearSelector";
 import { useMediaTracker } from "@/context/MediaTrackerContext";
@@ -13,8 +14,16 @@ import {
 } from "@/lib/notebookExport/settings";
 import { getBooksWithActivityInYear } from "@/lib/notebookExport/bookSelection";
 import { getTrackerYears } from "@/lib/trackerYears";
+import { prepareNotebookExportPayload } from "@/lib/notebookExport/prepareExportPayload";
+import { generatePdfFromHtml } from "@/lib/notebookExport/generatePdfFromHtml";
+import type { NotebookExportPayload } from "@/lib/notebookExport/buildExportData";
+import { NotebookHtmlPages } from "@/components/notebook-export/NotebookPages";
 import type { NotebookExportSettings } from "@/types";
 import type { NotebookStickerId } from "@/lib/notebookExport/assets";
+import "@/components/notebook-export/notebook-export.css";
+
+const caveat = Caveat({ subsets: ["latin"], weight: ["400", "600", "700"] });
+const specialElite = Special_Elite({ subsets: ["latin"], weight: "400" });
 
 function readFileAsDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -46,7 +55,11 @@ export function NotebookExportView() {
 
   const [year, setYear] = useState(() => years[0] ?? new Date().getFullYear());
   const [downloading, setDownloading] = useState(false);
+  const [preparing, setPreparing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [payload, setPayload] = useState<NotebookExportPayload | null>(null);
+  const [showPreview, setShowPreview] = useState(true);
+  const exportRef = useRef<HTMLDivElement>(null);
 
   const settings = useMemo(
     () => getNotebookExportSettingsForYear(notebookExportSettings, year),
@@ -58,6 +71,47 @@ export function NotebookExportView() {
     () => getBooksWithActivityInYear(books, activeYear),
     [books, activeYear],
   );
+
+  const exportInput = useMemo(
+    () => ({
+      year: activeYear,
+      books,
+      wishlist,
+      monthlyFavorites: getMonthlyFavoritesForYear(activeYear),
+      bracket: getBookOfYearBracket(activeYear),
+      readingGoal,
+      yearPixelLegends,
+      settings,
+    }),
+    [
+      activeYear,
+      books,
+      wishlist,
+      getMonthlyFavoritesForYear,
+      getBookOfYearBracket,
+      readingGoal,
+      yearPixelLegends,
+      settings,
+    ],
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+    setPreparing(true);
+    void prepareNotebookExportPayload(exportInput)
+      .then((data) => {
+        if (!cancelled) setPayload(data);
+      })
+      .catch(() => {
+        if (!cancelled) setError("No se pudo preparar la vista previa");
+      })
+      .finally(() => {
+        if (!cancelled) setPreparing(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [exportInput]);
 
   const updateSettings = (patch: Partial<NotebookExportSettings>) => {
     setNotebookExportSettings(activeYear, { ...settings, ...patch });
@@ -79,22 +133,14 @@ export function NotebookExportView() {
   };
 
   const handleDownload = async () => {
+    if (!exportRef.current) return;
     setDownloading(true);
     setError(null);
     try {
-      const { downloadNotebookPdf } = await import(
-        "@/lib/notebookExport/downloadNotebookPdf"
+      await generatePdfFromHtml(
+        exportRef.current,
+        `diario-lecturas-${activeYear}.pdf`,
       );
-      await downloadNotebookPdf({
-        year: activeYear,
-        books,
-        wishlist,
-        monthlyFavorites: getMonthlyFavoritesForYear(activeYear),
-        bracket: getBookOfYearBracket(activeYear),
-        readingGoal,
-        yearPixelLegends,
-        settings,
-      });
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se pudo generar el PDF");
     } finally {
@@ -102,25 +148,37 @@ export function NotebookExportView() {
     }
   };
 
+  const fontClass = `${caveat.className} ${specialElite.className}`;
+
   return (
-    <div className="space-y-6">
+    <div className={`space-y-6 ${fontClass}`}>
       <PanelHeader
         title="Exportar cuaderno"
-        subtitle="Genera un PDF anual como tu book journal de la tablet"
+        subtitle="Vista previa HTML fiel a tu scrapbook — descarga en PDF"
         action={
-          <button
-            type="button"
-            onClick={() => void handleDownload()}
-            disabled={downloading}
-            className="bj-btn-primary inline-flex items-center gap-2 disabled:opacity-60"
-          >
-            {downloading ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Download className="h-4 w-4" />
-            )}
-            Descargar PDF {activeYear}
-          </button>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => setShowPreview((v) => !v)}
+              className="bj-btn-secondary inline-flex items-center gap-2"
+            >
+              <Eye className="h-4 w-4" />
+              {showPreview ? "Ocultar" : "Ver"} previa
+            </button>
+            <button
+              type="button"
+              onClick={() => void handleDownload()}
+              disabled={downloading || preparing || !payload}
+              className="bj-btn-primary inline-flex items-center gap-2 disabled:opacity-60"
+            >
+              {downloading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Download className="h-4 w-4" />
+              )}
+              Descargar PDF {activeYear}
+            </button>
+          </div>
         }
       />
 
@@ -129,6 +187,7 @@ export function NotebookExportView() {
           <p className="text-sm font-medium text-bj-navy">Año del cuaderno</p>
           <p className="text-xs text-bj-muted">
             {booksInYear.length} lecturas con actividad en {activeYear}
+            {preparing ? " · actualizando vista previa…" : ""}
           </p>
         </div>
         <YearSelector years={years} year={activeYear} onChange={setYear} />
@@ -139,6 +198,30 @@ export function NotebookExportView() {
           {error}
         </div>
       )}
+
+      {showPreview && payload && (
+        <section className="bj-panel p-4">
+          <h3 className="mb-3 font-serif text-lg font-semibold text-bj-navy">Vista previa</h3>
+          <div className="nb-preview-scaler">
+            <div
+              className="nb-preview-scaler__inner"
+              style={{ transform: "scale(0.38)", width: 794, marginBottom: -680 }}
+            >
+              <NotebookHtmlPages payload={payload} />
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Contenedor oculto a tamaño real para captura PDF */}
+      <div
+        aria-hidden
+        style={{ position: "fixed", left: -12000, top: 0, pointerEvents: "none" }}
+      >
+        <div ref={exportRef} className="nb-export-root">
+          {payload && <NotebookHtmlPages payload={payload} />}
+        </div>
+      </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
         <section className="bj-panel space-y-4 p-5">
@@ -192,8 +275,8 @@ export function NotebookExportView() {
         <section className="bj-panel space-y-4 p-5 lg:col-span-2">
           <h3 className="font-serif text-lg font-semibold text-bj-navy">Pegatinas decorativas</h3>
           <p className="text-sm text-bj-muted">
-            Activa o desactiva cada pegatina. Puedes sustituir las imágenes en{" "}
-            <code className="text-xs">public/notebook-assets/stickers/</code>
+            Sustituye las imágenes en{" "}
+            <code className="text-xs">public/notebook-assets/stickers/</code> por tus PNGs reales.
           </p>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {(Object.keys(NOTEBOOK_STICKERS) as NotebookStickerId[]).map((stickerId) => {
@@ -217,12 +300,6 @@ export function NotebookExportView() {
             })}
           </div>
         </section>
-      </div>
-
-      <div className="rounded-xl border border-bj-border bg-bj-surface/40 px-4 py-3 text-sm text-bj-muted">
-        El PDF incluye las 11 secciones de tu cuaderno: portada con líneas de color por libro,
-        wishlist, year in pixels, overview, tabla maestra, favoritos, book of the year, fichas
-        scrapbook y calendario de estrellas — incluso si alguna sección está vacía.
       </div>
     </div>
   );
