@@ -1,10 +1,18 @@
-import type { Movie } from "@/types";
+import type { Movie, MovieStatus } from "@/types";
 
 export function getMoviesWatchedInYear(movies: Movie[], year: number): Movie[] {
   return movies.filter((movie) => {
+    const logs = movie.watchLogs ?? [];
+    if (logs.length > 0) {
+      return logs.some((log) => new Date(log.date).getFullYear() === year);
+    }
     const date = movie.watchDate ?? movie.createdAt.slice(0, 10);
     return new Date(date).getFullYear() === year;
   });
+}
+
+export function getMoviesByStatus(movies: Movie[], status: MovieStatus): Movie[] {
+  return movies.filter((movie) => movie.status === status);
 }
 
 export function getMovieGenreStats(movies: Movie[]): { genre: string; count: number }[] {

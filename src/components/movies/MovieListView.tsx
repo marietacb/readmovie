@@ -2,7 +2,7 @@
 
 import { Plus, Star, Film } from "lucide-react";
 import { formatGenres } from "@/lib/genres";
-import { MOVIE_FEELINGS } from "@/lib/constants";
+import { MOVIE_FEELINGS, MOVIE_STATUSES } from "@/lib/constants";
 import type { Movie } from "@/types";
 
 interface MovieListViewProps {
@@ -14,6 +14,9 @@ interface MovieListViewProps {
 export function MovieListView({ movies, onMovieClick, onNewMovie }: MovieListViewProps) {
   const feelingLabels = Object.fromEntries(
     MOVIE_FEELINGS.map((f) => [f.value, f.label])
+  );
+  const statusLabels = Object.fromEntries(
+    MOVIE_STATUSES.map((s) => [s.value, s.label])
   );
 
   return (
@@ -64,9 +67,15 @@ export function MovieListView({ movies, onMovieClick, onNewMovie }: MovieListVie
                 </p>
                 {movie.watchDate && (
                   <p className="text-xs text-bj-muted">
-                    Vista el {new Date(movie.watchDate).toLocaleDateString("es-ES")}
+                    {(movie.watchLogs?.length ?? 0) > 1
+                      ? `${movie.watchLogs.length} visionados · último `
+                      : "Vista el "}
+                    {new Date(movie.watchDate).toLocaleDateString("es-ES")}
                   </p>
                 )}
+                <span className="mt-1 inline-block rounded-full bg-bj-navy/5 px-2 py-0.5 text-[10px] text-bj-muted">
+                  {statusLabels[movie.status]}
+                </span>
                 {movie.summary && (
                   <p className="mt-1 line-clamp-2 text-xs text-bj-muted">{movie.summary}</p>
                 )}

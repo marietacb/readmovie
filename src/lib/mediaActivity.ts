@@ -57,6 +57,23 @@ export function getActivityEvents(
   });
 
   movies.forEach((movie) => {
+    const logs = movie.watchLogs ?? [];
+
+    if (logs.length > 0) {
+      logs.forEach((log) => {
+        events.push({
+          id: `movie-watch-${log.id}`,
+          kind: "movie",
+          date: dateKey(log.date),
+          title: movie.title,
+          subtitle: movie.director,
+          detail: `Visionado${log.note ? ` · ${log.note}` : ""}${movie.rating > 0 ? ` · ${movie.rating}★` : ""}`,
+          movieId: movie.id,
+        });
+      });
+      return;
+    }
+
     const watchDate = movie.watchDate ?? movie.createdAt.slice(0, 10);
     if (movie.watchDate || movie.rating > 0) {
       events.push({

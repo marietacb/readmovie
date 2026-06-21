@@ -3,12 +3,14 @@
 import { useState } from "react";
 import { Trash2, Save } from "lucide-react";
 import { useMediaTracker } from "@/context/MediaTrackerContext";
-import { MOVIE_FEELINGS } from "@/lib/constants";
+import { MOVIE_FEELINGS, MOVIE_STATUSES } from "@/lib/constants";
 import { RatingIcons } from "@/components/ui/RatingIcons";
 import { GenreTagsInput } from "@/components/ui/GenreTagsInput";
 import { normalizeGenres } from "@/lib/genres";
+import { getLatestWatchDate } from "@/lib/movieWatchLogs";
 import { TagCheckbox } from "@/components/ui/TagCheckbox";
-import type { Movie, MovieFeeling } from "@/types";
+import { MovieWatchJournal } from "@/components/movies/MovieWatchJournal";
+import type { Movie, MovieFeeling, MovieStatus } from "@/types";
 
 interface MovieReviewFormProps {
   movieId?: string;
@@ -21,14 +23,11 @@ const EMPTY_FORM = {
   director: "",
   genres: [] as string[],
   originalNationality: "",
+  status: "watched" as MovieStatus,
   summary: "",
   rating: 0,
   feelings: [] as MovieFeeling[],
-  bestMoments: ["", "", ""],
-  worstMoments: ["", "", ""],
-  favouriteQuotes: ["", "", "", ""],
   posterUrl: "",
-  watchDate: new Date().toISOString().split("T")[0],
 };
 
 function FormField({ label, children }: { label: string; children: React.ReactNode }) {
@@ -42,52 +41,17 @@ function FormField({ label, children }: { label: string; children: React.ReactNo
   );
 }
 
-function BulletInputs({
-  items,
-  onChange,
-  count,
-}: {
-  items: string[];
-  onChange: (items: string[]) => void;
-  count: number;
-}) {
-  const padded = [...items];
-  while (padded.length < count) padded.push("");
-
-  return (
-    <div className="space-y-2">
-      {padded.slice(0, count).map((item, i) => (
-        <div key={i} className="flex items-center gap-2">
-          <span className="h-2 w-2 shrink-0 rounded-full bg-bj-terracotta/60" />
-          <input
-            value={item}
-            onChange={(e) => {
-              const updated = [...padded];
-              updated[i] = e.target.value;
-              onChange(updated);
-            }}
-            className="bj-input"
-          />
-        </div>
-      ))}
-    </div>
-  );
-}
-
 function movieToForm(movie: Movie) {
   return {
     title: movie.title,
     director: movie.director,
     genres: movie.genres,
     originalNationality: movie.originalNationality ?? "",
+    status: movie.status,
     summary: movie.summary,
     rating: movie.rating,
     feelings: movie.feelings,
-    bestMoments: [...movie.bestMoments, "", "", ""].slice(0, 3),
-    worstMoments: [...movie.worstMoments, "", "", ""].slice(0, 3),
-    favouriteQuotes: [...movie.favouriteQuotes, "", "", "", ""].slice(0, 4),
     posterUrl: movie.posterUrl ?? "",
-    watchDate: movie.watchDate ?? "",
   };
 }
 
@@ -111,19 +75,22 @@ export function MovieReviewForm({ movieId, onSaved, onDeleted }: MovieReviewForm
   const handleSave = () => {
     if (!form.title.trim()) return;
 
+    const logs = movie?.watchLogs ?? [];
+    const watchDate =
+      logs.length > 0 ? getLatestWatchDate(logs) : movie?.watchDate;
+
     const data = {
       title: form.title.trim(),
       director: form.director.trim(),
       genres: normalizeGenres(form.genres),
       originalNationality: form.originalNationality.trim() || undefined,
+      status: form.status,
       summary: form.summary.trim(),
       rating: form.rating,
       feelings: form.feelings,
-      bestMoments: form.bestMoments.filter((m) => m.trim()),
-      worstMoments: form.worstMoments.filter((m) => m.trim()),
-      favouriteQuotes: form.favouriteQuotes.filter((q) => q.trim()),
       posterUrl: form.posterUrl || undefined,
-      watchDate: form.watchDate || undefined,
+      watchDate,
+      watchLogs: logs,
     };
 
     if (movieId) {
@@ -176,13 +143,18 @@ export function MovieReviewForm({ movieId, onSaved, onDeleted }: MovieReviewForm
               className="bj-input"
             />
           </FormField>
-          <FormField label="Fecha de visionado">
-            <input
-              type="date"
-              value={form.watchDate}
-              onChange={(e) => set("watchDate", e.target.value)}
+          <FormField label="Estado">
+            <select
+              value={form.status}
+              onChange={(e) => set("status", e.target.value as MovieStatus)}
               className="bj-input"
-            />
+            >
+              {MOVIE_STATUSES.map((s) => (
+                <option key={s.value} value={s.value}>
+                  {s.label}
+                </option>
+              ))}
+            </select>
           </FormField>
         </div>
 
@@ -203,6 +175,8 @@ export function MovieReviewForm({ movieId, onSaved, onDeleted }: MovieReviewForm
           />
         </div>
       </div>
+
+      {movie && <MovieWatchJournal key={movie.id} movie={movie} />}
 
       <div className="mt-6 rounded-xl border border-bj-border bg-bj-surface/30 p-5">
         <span className="mb-3 block text-xs font-semibold uppercase tracking-wide text-bj-muted">
@@ -234,22 +208,6 @@ export function MovieReviewForm({ movieId, onSaved, onDeleted }: MovieReviewForm
         <div className="flex items-end">
           <RatingIcons type="star" value={form.rating} onChange={(v) => set("rating", v)} size="lg" label="Valoración" />
         </div>
-      </div>
-
-      <div className="mt-8 grid gap-6 md:grid-cols-2">
-        <div className="rounded-xl border border-bj-border p-5">
-          <span className="mb-3 block text-xs font-semibold uppercase tracking-wide text-bj-muted">Mejores momentos</span>
-          <BulletInputs items={form.bestMoments} onChange={(v) => set("bestMoments", v)} count={3} />
-        </div>
-        <div className="rounded-xl border border-bj-border p-5">
-          <span className="mb-3 block text-xs font-semibold uppercase tracking-wide text-bj-muted">Peores momentos</span>
-          <BulletInputs items={form.worstMoments} onChange={(v) => set("worstMoments", v)} count={3} />
-        </div>
-      </div>
-
-      <div className="mt-6 rounded-xl border border-bj-border p-5">
-        <span className="mb-3 block text-xs font-semibold uppercase tracking-wide text-bj-muted">Citas favoritas</span>
-        <BulletInputs items={form.favouriteQuotes} onChange={(v) => set("favouriteQuotes", v)} count={4} />
       </div>
 
       <div className="mt-8 flex justify-end gap-3 border-t border-bj-border pt-6">

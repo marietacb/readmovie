@@ -1,4 +1,4 @@
-import type { BookFormat, MovieFeeling, Month, SeriesStatus, StoryType } from "@/types";
+import type { BookFormat, MovieFeeling, MovieStatus, Month, SeriesStatus, StoryType } from "@/types";
 
 export const MONTH_NAMES: Record<Month, string> = {
   1: "Enero",
@@ -32,6 +32,16 @@ export const SERIES_STATUSES: { value: SeriesStatus; label: string }[] = [
   { value: "watching", label: "Viendo ahora" },
   { value: "completed", label: "Terminada" },
   { value: "plan_to_watch", label: "Quiero verla" },
+  { value: "watched_again", label: "Vista de nuevo" },
+  { value: "partially_dropped", label: "Medio abandonada" },
+  { value: "dropped", label: "Abandonada" },
+];
+
+export const MOVIE_STATUSES: { value: MovieStatus; label: string }[] = [
+  { value: "watched", label: "Vista" },
+  { value: "plan_to_watch", label: "Quiero verla" },
+  { value: "watched_again", label: "Vista de nuevo" },
+  { value: "partially_dropped", label: "Medio abandonada" },
   { value: "dropped", label: "Abandonada" },
 ];
 

@@ -18,6 +18,8 @@ import type {
   StoryType,
   WishlistItem,
   EpisodeWatchLog,
+  MovieWatchLog,
+  MovieStatus,
 } from "@/types";
 
 export interface BookRow {
@@ -60,11 +62,10 @@ export interface MovieRow {
   summary: string;
   rating: number;
   feelings: string[];
-  best_moments: string[];
-  worst_moments: string[];
-  favourite_quotes: string[];
   poster_url: string | null;
   watch_date: string | null;
+  watch_logs?: MovieWatchLog[];
+  status?: string;
   created_at: string;
   updated_at: string;
 }
@@ -87,10 +88,6 @@ export interface SeriesRow {
   end_date: string | null;
   feelings: string[];
   favorite_characters: string | null;
-  favorite_episodes: string[];
-  best_moments: string[];
-  worst_moments: string[];
-  favourite_quotes: string[];
   episode_watch_logs?: EpisodeWatchLog[];
   poster_url: string | null;
   created_at: string;
@@ -189,11 +186,10 @@ export function movieToRow(movie: Movie, userId: string): MovieRow {
     summary: movie.summary,
     rating: movie.rating,
     feelings: movie.feelings,
-    best_moments: movie.bestMoments,
-    worst_moments: movie.worstMoments,
-    favourite_quotes: movie.favouriteQuotes,
     poster_url: movie.posterUrl ?? null,
     watch_date: movie.watchDate ?? null,
+    watch_logs: movie.watchLogs ?? [],
+    status: movie.status,
     created_at: movie.createdAt,
     updated_at: movie.updatedAt,
   };
@@ -209,11 +205,10 @@ export function rowToMovie(row: MovieRow): Movie {
     summary: row.summary,
     rating: row.rating,
     feelings: row.feelings as MovieFeeling[],
-    bestMoments: row.best_moments,
-    worstMoments: row.worst_moments,
-    favouriteQuotes: row.favourite_quotes,
     posterUrl: row.poster_url ?? undefined,
     watchDate: row.watch_date ?? undefined,
+    watchLogs: row.watch_logs ?? [],
+    status: (row.status ?? "watched") as MovieStatus,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   });
@@ -238,10 +233,6 @@ export function seriesToRow(series: Series, userId: string): SeriesRow {
     end_date: series.endDate ?? null,
     feelings: series.feelings,
     favorite_characters: series.favoriteCharacters ?? null,
-    favorite_episodes: series.favoriteEpisodes,
-    best_moments: series.bestMoments,
-    worst_moments: series.worstMoments,
-    favourite_quotes: series.favouriteQuotes,
     episode_watch_logs: series.episodeWatchLogs ?? [],
     poster_url: series.posterUrl ?? null,
     created_at: series.createdAt,
@@ -267,11 +258,7 @@ export function rowToSeries(row: SeriesRow): Series {
     endDate: row.end_date ?? undefined,
     feelings: row.feelings as MovieFeeling[],
     favoriteCharacters: row.favorite_characters ?? undefined,
-    favoriteEpisodes: row.favorite_episodes,
     episodeWatchLogs: row.episode_watch_logs ?? [],
-    bestMoments: row.best_moments,
-    worstMoments: row.worst_moments,
-    favouriteQuotes: row.favourite_quotes,
     posterUrl: row.poster_url ?? undefined,
     createdAt: row.created_at,
     updatedAt: row.updated_at,

@@ -34,10 +34,6 @@ const EMPTY_FORM = {
   endDate: "",
   feelings: [] as MovieFeeling[],
   favoriteCharacters: "",
-  favoriteEpisodes: ["", "", ""],
-  bestMoments: ["", "", ""],
-  worstMoments: ["", "", ""],
-  favouriteQuotes: ["", "", "", ""],
   posterUrl: "",
 };
 
@@ -48,38 +44,6 @@ function FormField({ label, children }: { label: string; children: React.ReactNo
         {label}
       </label>
       {children}
-    </div>
-  );
-}
-
-function BulletInputs({
-  items,
-  onChange,
-  count,
-}: {
-  items: string[];
-  onChange: (items: string[]) => void;
-  count: number;
-}) {
-  const padded = [...items];
-  while (padded.length < count) padded.push("");
-
-  return (
-    <div className="space-y-2">
-      {padded.slice(0, count).map((item, i) => (
-        <div key={i} className="flex items-center gap-2">
-          <span className="h-2 w-2 shrink-0 rounded-full bg-bj-terracotta/60" />
-          <input
-            value={item}
-            onChange={(e) => {
-              const updated = [...padded];
-              updated[i] = e.target.value;
-              onChange(updated);
-            }}
-            className="bj-input"
-          />
-        </div>
-      ))}
     </div>
   );
 }
@@ -101,10 +65,6 @@ function seriesToForm(item: Series) {
     endDate: item.endDate ?? "",
     feelings: item.feelings,
     favoriteCharacters: item.favoriteCharacters ?? "",
-    favoriteEpisodes: [...item.favoriteEpisodes, "", "", ""].slice(0, 3),
-    bestMoments: [...item.bestMoments, "", "", ""].slice(0, 3),
-    worstMoments: [...item.worstMoments, "", "", ""].slice(0, 3),
-    favouriteQuotes: [...item.favouriteQuotes, "", "", "", ""].slice(0, 4),
     posterUrl: item.posterUrl ?? "",
   };
 }
@@ -166,10 +126,6 @@ export function SeriesReviewForm({ seriesId, onSaved, onDeleted }: SeriesReviewF
       endDate: form.endDate || undefined,
       feelings: form.feelings,
       favoriteCharacters: form.favoriteCharacters.trim() || undefined,
-      favoriteEpisodes: form.favoriteEpisodes.filter((e) => e.trim()),
-      bestMoments: form.bestMoments.filter((m) => m.trim()),
-      worstMoments: form.worstMoments.filter((m) => m.trim()),
-      favouriteQuotes: form.favouriteQuotes.filter((q) => q.trim()),
       posterUrl: form.posterUrl || undefined,
       episodeWatchLogs: logs,
     };
@@ -355,29 +311,6 @@ export function SeriesReviewForm({ seriesId, onSaved, onDeleted }: SeriesReviewF
             className="bj-input resize-none"
           />
         </FormField>
-      </div>
-
-      <div className="mt-6 rounded-xl border border-bj-border p-5">
-        <span className="mb-3 block text-xs font-semibold uppercase tracking-wide text-bj-muted">
-          Episodios favoritos
-        </span>
-        <BulletInputs items={form.favoriteEpisodes} onChange={(v) => set("favoriteEpisodes", v)} count={3} />
-      </div>
-
-      <div className="mt-8 grid gap-6 md:grid-cols-2">
-        <div className="rounded-xl border border-bj-border p-5">
-          <span className="mb-3 block text-xs font-semibold uppercase tracking-wide text-bj-muted">Mejores momentos</span>
-          <BulletInputs items={form.bestMoments} onChange={(v) => set("bestMoments", v)} count={3} />
-        </div>
-        <div className="rounded-xl border border-bj-border p-5">
-          <span className="mb-3 block text-xs font-semibold uppercase tracking-wide text-bj-muted">Peores momentos</span>
-          <BulletInputs items={form.worstMoments} onChange={(v) => set("worstMoments", v)} count={3} />
-        </div>
-      </div>
-
-      <div className="mt-6 rounded-xl border border-bj-border p-5">
-        <span className="mb-3 block text-xs font-semibold uppercase tracking-wide text-bj-muted">Citas favoritas</span>
-        <BulletInputs items={form.favouriteQuotes} onChange={(v) => set("favouriteQuotes", v)} count={4} />
       </div>
 
       <div className="mt-8 flex justify-end gap-3 border-t border-bj-border pt-6">

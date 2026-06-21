@@ -269,7 +269,7 @@ export class SupabaseStorageService implements StorageService {
         supabase,
         "movies",
         data.movies.map((m) => movieToRow(m, this.userId) as unknown as Record<string, unknown>),
-        ["original_nationality"],
+        ["watch_logs", "status", "original_nationality"],
       );
     }
 

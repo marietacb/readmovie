@@ -22,6 +22,7 @@ import { sanitizeBandsForSave } from "@/lib/pixelLegends";
 import { setNotebookExportSettingsForYear } from "@/lib/notebookExport/settings";
 import { getDayNote, setDayNoteInMap } from "@/lib/dayNotes";
 import { countUniqueEpisodes } from "@/lib/episodeWatchLogs";
+import { getLatestWatchDate } from "@/lib/movieWatchLogs";
 import { applyNotebookImport, type ImportResult, type NotebookImportPayload } from "@/lib/importBooks";
 import { generateId, randomSpineColor } from "@/lib/utils";
 import { getStorageService, usesCloudStorage } from "@/services/storage";
@@ -35,6 +36,7 @@ import type {
   MonthlyFavorites,
   Movie,
   MovieFeeling,
+  MovieWatchLog,
   ReadingSession,
   EpisodeWatchLog,
   Series,
@@ -73,6 +75,8 @@ interface MediaTrackerContextValue {
   updateMovie: (id: string, updates: Partial<Movie>) => void;
   deleteMovie: (id: string) => void;
   getMovie: (id: string) => Movie | undefined;
+  addMovieWatchLog: (movieId: string, log: Omit<MovieWatchLog, "id">) => void;
+  removeMovieWatchLog: (movieId: string, logId: string) => void;
   addSeries: (series: Omit<Series, "id" | "createdAt" | "updatedAt">) => Series;
   updateSeries: (id: string, updates: Partial<Series>) => void;
   deleteSeries: (id: string) => void;
@@ -290,6 +294,7 @@ export function MediaTrackerProvider({ children }: { children: ReactNode }) {
       const now = new Date().toISOString();
       const newMovie: Movie = {
         ...movie,
+        watchLogs: movie.watchLogs ?? [],
         id: generateId(),
         createdAt: now,
         updatedAt: now,
@@ -323,12 +328,49 @@ export function MediaTrackerProvider({ children }: { children: ReactNode }) {
     [data.movies]
   );
 
+  const addMovieWatchLog = useCallback(
+    (movieId: string, log: Omit<MovieWatchLog, "id">) => {
+      setData((prev) => ({
+        ...prev,
+        movies: prev.movies.map((item) => {
+          if (item.id !== movieId) return item;
+          const watchLogs = [
+            ...(item.watchLogs ?? []),
+            { ...log, id: generateId(), date: log.date.slice(0, 10) },
+          ].sort((a, b) => b.date.localeCompare(a.date));
+          return {
+            ...item,
+            watchLogs,
+            watchDate: getLatestWatchDate(watchLogs),
+            updatedAt: new Date().toISOString(),
+          };
+        }),
+      }));
+    },
+    [],
+  );
+
+  const removeMovieWatchLog = useCallback((movieId: string, logId: string) => {
+    setData((prev) => ({
+      ...prev,
+      movies: prev.movies.map((item) => {
+        if (item.id !== movieId) return item;
+        const watchLogs = (item.watchLogs ?? []).filter((log) => log.id !== logId);
+        return {
+          ...item,
+          watchLogs,
+          watchDate: getLatestWatchDate(watchLogs),
+          updatedAt: new Date().toISOString(),
+        };
+      }),
+    }));
+  }, []);
+
   const addSeries = useCallback(
     (series: Omit<Series, "id" | "createdAt" | "updatedAt">): Series => {
       const now = new Date().toISOString();
       const newSeries: Series = {
         ...series,
-        favoriteEpisodes: series.favoriteEpisodes ?? [],
         episodeWatchLogs: series.episodeWatchLogs ?? [],
         id: generateId(),
         createdAt: now,
@@ -644,6 +686,8 @@ export function MediaTrackerProvider({ children }: { children: ReactNode }) {
       updateMovie,
       deleteMovie,
       getMovie,
+      addMovieWatchLog,
+      removeMovieWatchLog,
       addSeries,
       updateSeries,
       deleteSeries,
@@ -684,6 +728,8 @@ export function MediaTrackerProvider({ children }: { children: ReactNode }) {
       updateMovie,
       deleteMovie,
       getMovie,
+      addMovieWatchLog,
+      removeMovieWatchLog,
       addSeries,
       updateSeries,
       deleteSeries,

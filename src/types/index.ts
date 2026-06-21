@@ -126,6 +126,20 @@ export type MovieFeeling =
   | "regret_watching"
   | "very_funny";
 
+export type MovieStatus =
+  | "watched"
+  | "plan_to_watch"
+  | "watched_again"
+  | "partially_dropped"
+  | "dropped";
+
+/** Cada vez que ves la película (puede repetirse en fechas distintas). */
+export interface MovieWatchLog {
+  id: string;
+  date: string;
+  note?: string;
+}
+
 export interface Movie {
   id: string;
   title: string;
@@ -134,19 +148,25 @@ export interface Movie {
   originalNationality?: string;
   summary: string;
   rating: number;
+  status: MovieStatus;
   feelings: MovieFeeling[];
-  bestMoments: string[];
-  worstMoments: string[];
-  favouriteQuotes: string[];
   posterUrl?: string;
+  /** Última fecha de visionado (sincronizada con el diario). */
   watchDate?: string;
+  watchLogs: MovieWatchLog[];
   createdAt: string;
   updatedAt: string;
 }
 
 // ─── Series ───────────────────────────────────────────────────────────────────
 
-export type SeriesStatus = "watching" | "completed" | "dropped" | "plan_to_watch";
+export type SeriesStatus =
+  | "watching"
+  | "completed"
+  | "plan_to_watch"
+  | "dropped"
+  | "watched_again"
+  | "partially_dropped";
 
 /** Visionado de un episodio en una fecha (puede repetirse en días distintos). */
 export interface EpisodeWatchLog {
@@ -174,11 +194,7 @@ export interface Series {
   endDate?: string;
   feelings: MovieFeeling[];
   favoriteCharacters?: string;
-  favoriteEpisodes: string[];
   episodeWatchLogs: EpisodeWatchLog[];
-  bestMoments: string[];
-  worstMoments: string[];
-  favouriteQuotes: string[];
   posterUrl?: string;
   createdAt: string;
   updatedAt: string;

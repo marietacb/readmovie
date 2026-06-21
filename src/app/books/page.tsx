@@ -261,7 +261,7 @@ export default function BooksPage() {
       {activeTab === "estadisticas" && <StatsView books={books} />}
       {activeTab === "resumen_mes" && <MonthlyRecapView books={books} />}
       {activeTab === "diario" && (
-        <JournalView books={books} movies={movies} series={series} onBookClick={openBook} />
+        <JournalView books={books} onBookClick={openBook} />
       )}
       {activeTab === "libreria" && (
         <LibraryView books={books} onBookClick={openBook} onNewBook={handleNewBook} />

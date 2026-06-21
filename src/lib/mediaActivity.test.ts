@@ -30,10 +30,9 @@ describe("mediaActivity", () => {
         genres: ["Sci-fi"],
         summary: "",
         rating: 5,
+        status: "watched",
         feelings: [],
-        bestMoments: [],
-        worstMoments: [],
-        favouriteQuotes: [],
+        watchLogs: [],
         watchDate: "2026-03-01",
         createdAt: "2026-03-01",
         updatedAt: "2026-03-01",
@@ -50,11 +49,7 @@ describe("mediaActivity", () => {
         rating: 4,
         status: "completed",
         feelings: [],
-        favoriteEpisodes: [],
         episodeWatchLogs: [],
-        bestMoments: [],
-        worstMoments: [],
-        favouriteQuotes: [],
         endDate: "2026-03-02",
         createdAt: "2026-01-01",
         updatedAt: "2026-01-01",
@@ -78,15 +73,11 @@ describe("mediaActivity", () => {
         rating: 5,
         status: "watching",
         feelings: [],
-        favoriteEpisodes: [],
         episodeWatchLogs: [
           { id: "log1", date: "2026-04-01", season: 1, episode: 3 },
           { id: "log2", date: "2026-04-01", season: 1, episode: 4, note: "noche larga" },
           { id: "log3", date: "2026-04-10", season: 1, episode: 3 },
         ],
-        bestMoments: [],
-        worstMoments: [],
-        favouriteQuotes: [],
         createdAt: "2026-01-01",
         updatedAt: "2026-01-01",
       },
@@ -98,5 +89,32 @@ describe("mediaActivity", () => {
     expect(dayEvents.filter((e) => e.id.startsWith("series-ep-"))).toHaveLength(2);
     expect(dayEvents.some((e) => e.detail?.includes("noche larga"))).toBe(true);
     expect(getEventsForDate(events, "2026-04-10")).toHaveLength(1);
+  });
+
+  it("incluye visionados de películas por día en el calendario", () => {
+    const movies: Movie[] = [
+      {
+        id: "m1",
+        title: "Parasite",
+        director: "Bong",
+        genres: ["Drama"],
+        summary: "",
+        rating: 5,
+        status: "watched_again",
+        feelings: [],
+        watchLogs: [
+          { id: "w1", date: "2026-05-01", note: "primera vez" },
+          { id: "w2", date: "2026-05-10" },
+        ],
+        watchDate: "2026-05-10",
+        createdAt: "2026-01-01",
+        updatedAt: "2026-01-01",
+      },
+    ];
+
+    const events = getActivityEvents([], movies, []);
+    expect(getEventsForDate(events, "2026-05-01")).toHaveLength(1);
+    expect(getEventsForDate(events, "2026-05-10")).toHaveLength(1);
+    expect(events.filter((e) => e.id.startsWith("movie-watch-"))).toHaveLength(2);
   });
 });
