@@ -18,8 +18,8 @@ export function LandingHeader() {
         </div>
         <div className="flex items-center gap-3">
           <AuthButton />
-          <Link href="/books" className="bj-btn-primary">
-            Empezar
+          <Link href="/books" className="bj-btn-primary hidden sm:inline-flex">
+            Acceder
           </Link>
         </div>
       </div>
